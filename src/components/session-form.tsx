@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Users, BookOpen } from 'lucide-react';
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Calendar, MapPin, Users, BookOpen } from "lucide-react";
 
 interface SessionFormProps {
   sessionData: {
@@ -30,7 +30,7 @@ export function SessionForm({
   onCreateSession,
 }: SessionFormProps) {
   const handleInputChange = (field: string, value: string) => {
-    setSessionData(prev => ({ ...prev, [field]: value }));
+    setSessionData((prev) => ({ ...prev, [field]: value }));
   };
 
   const isFormValid =
@@ -57,7 +57,7 @@ export function SessionForm({
             id="subject"
             placeholder="Enter Course id/name"
             value={sessionData.subjectName}
-            onChange={e => handleInputChange('subjectName', e.target.value)}
+            onChange={(e) => handleInputChange("subjectName", e.target.value)}
             className="w-full"
           />
         </div>
@@ -73,7 +73,7 @@ export function SessionForm({
               id="classroom"
               placeholder="Enter classroom number"
               value={sessionData.classroomNo}
-              onChange={e => handleInputChange('classroomNo', e.target.value)}
+              onChange={(e) => handleInputChange("classroomNo", e.target.value)}
               className="pl-10 w-full"
             />
           </div>
@@ -84,7 +84,8 @@ export function SessionForm({
           <Label className="text-sm font-medium">Section</Label>
           <Select
             value={sessionData.section}
-            onValueChange={value => handleInputChange('section', value)}>
+            onValueChange={(value) => handleInputChange("section", value)}
+          >
             <SelectTrigger className="w-full">
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
@@ -105,7 +106,8 @@ export function SessionForm({
           <Label className="text-sm font-medium">Semester</Label>
           <Select
             value={sessionData.semester}
-            onValueChange={value => handleInputChange('semester', value)}>
+            onValueChange={(value) => handleInputChange("semester", value)}
+          >
             <SelectTrigger className="w-full">
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
@@ -130,7 +132,9 @@ export function SessionForm({
           onClick={onCreateSession}
           disabled={!isFormValid}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-          size="lg">
+          size="lg"
+          onPress={() => console.log("Create Session")}
+        >
           Create Session & Generate QR Code
         </Button>
       </CardContent>

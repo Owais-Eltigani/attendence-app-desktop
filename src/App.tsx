@@ -1,31 +1,28 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { SessionForm } from './components/session-form';
-import { QRCodeDisplay } from './components/qr-code-display';
-import { GraduationCap } from 'lucide-react';
-import { Button } from './components/ui/button';
+import { useState } from "react";
+import { SessionForm } from "./components/session-form";
+import { QRCodeDisplay } from "./components/qr-code-display";
+import { GraduationCap } from "lucide-react";
+import { Button } from "./components/ui/button";
+import { validateSessionFormData } from "./utils";
 
 export default function StudentAttendanceApp() {
   const [sessionData, setSessionData] = useState({
-    subjectName: '',
-    classroomNo: '',
-    section: '',
-    semester: '',
+    subjectName: "",
+    classroomNo: "",
+    section: "",
+    semester: "",
   });
 
-  const [qrCodeData, setQrCodeData] = useState('');
-  const [showAttendance, setShowAttendance] = useState(false);
+  const [qrCodeData, setQrCodeData] = useState("");
+  const [showAttendance, setShowAttendance] = useState(true);
 
   const handleCreateSession = () => {
-    if (
-      sessionData.subjectName &&
-      sessionData.classroomNo &&
-      sessionData.section &&
-      sessionData.semester
-    ) {
-      const sessionId = `${sessionData.subjectName}-${
-        sessionData.classroomNo
+    // check form not empty
+    if (validateSessionFormData(sessionData)) {
+      const sessionId = `${sessionData.section}-${
+        sessionData.semester
       }-${Date.now()}`;
       setQrCodeData(sessionId);
       setShowAttendance(true);
@@ -65,7 +62,7 @@ export default function StudentAttendanceApp() {
       </div>
 
       {/* Bottom - Attendance Table */}
-      {'showAttendance' && (
+      {showAttendance && (
         <div className="bg-white border border-gray-200 rounded-lg h-96 shadow-sm">
           {/* Empty white box for future content */}
           <h1 className="text-lg font-semibold p-4 text-center text-gray-500">
