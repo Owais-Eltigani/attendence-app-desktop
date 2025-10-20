@@ -1,3 +1,4 @@
+import { attendanceRecord } from "@/types";
 import { ipcRenderer, contextBridge } from "electron";
 
 // --------- Expose some API to the Renderer process ---------
@@ -22,7 +23,14 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
   },
 
   // You can expose other APTs you need here.
-  sendFormData: (callback: (data) => void) => {
-    callback("from data from front end");
-  },
+  // Accept a data string and optional callback; send it to main and call callback with the data.
+});
+
+contextBridge.exposeInMainWorld("electronAPI", {
+  createHotspotSession: (data: attendanceRecord) =>
+    ipcRenderer.invoke("createSession", data),
+  updateHotspotSession: (callback: (data: attendanceRecord) => void) =>
+    ipcRenderer.invoke("updateSession", (_event, data: attendanceRecord) =>
+      callback(data)
+    ),
 });

@@ -5,10 +5,11 @@ import { SessionForm } from "./components/session-form";
 import { QRCodeDisplay } from "./components/qr-code-display";
 import { GraduationCap } from "lucide-react";
 import { Button } from "./components/ui/button";
-import { validateSessionFormData } from "./utils";
+import { validateSessionattendanceRecord } from "./utils";
+import { attendanceRecord } from "./types";
 
 export default function StudentAttendanceApp() {
-  const [sessionData, setSessionData] = useState({
+  const [sessionData, setSessionData] = useState<attendanceRecord>({
     subjectName: "",
     classroomNo: "",
     section: "",
@@ -18,12 +19,21 @@ export default function StudentAttendanceApp() {
   const [qrCodeData, setQrCodeData] = useState("");
   const [showAttendance, setShowAttendance] = useState(true);
 
-  const handleCreateSession = () => {
+  const handleCreateSession = async () => {
     // check form not empty
-    if (validateSessionFormData(sessionData)) {
-      const sessionId = `${sessionData.section}-${
+    if (validateSessionattendanceRecord(sessionData)) {
+      const sessionId = `${sessionData.section}${
         sessionData.semester
       }-${Date.now()}`;
+
+      try {
+        //@ts-expect-error. suppressing ts error for electronAPI
+        await window.electronAPI.createHotspotSession(sessionData);
+      } catch (error) {
+        console.log("🚀 ~ handleCreateSession ~ error:", error);
+      }
+
+      //TODO implement the qrcode generation logic here
       setQrCodeData(sessionId);
       setShowAttendance(true);
     }

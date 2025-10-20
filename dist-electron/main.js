@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -13,8 +13,8 @@ let win;
 function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
-    height: 1100,
-    width: 1100,
+    height: 1e3,
+    width: 1e3,
     resizable: false,
     webPreferences: {
       preload: path.join(__dirname, "preload.mjs")
@@ -41,6 +41,10 @@ app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+ipcMain.handle("createSession", async (_event, data) => {
+  console.log("🚀 ~ ipcMain.handle ~ data:", data);
+  return "data has been received in main process";
 });
 app.whenReady().then(createWindow);
 export {

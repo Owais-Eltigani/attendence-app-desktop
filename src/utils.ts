@@ -1,4 +1,4 @@
-export const validateSessionFormData = ({
+export const validateSessionattendanceRecord = ({
   subjectName,
   classroomNo,
   section,

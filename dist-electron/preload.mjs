@@ -19,9 +19,14 @@ electron.contextBridge.exposeInMainWorld("ipcRenderer", {
   invoke(...args) {
     const [channel, ...omit] = args;
     return electron.ipcRenderer.invoke(channel, ...omit);
-  },
-  // You can expose other APTs you need here.
-  sendFormData: (callback) => {
-    callback("from data from front end");
   }
+  // You can expose other APTs you need here.
+  // Accept a data string and optional callback; send it to main and call callback with the data.
+});
+electron.contextBridge.exposeInMainWorld("electronAPI", {
+  createHotspotSession: (data) => electron.ipcRenderer.invoke("createSession", data),
+  updateHotspotSession: (callback) => electron.ipcRenderer.invoke(
+    "updateSession",
+    (_event, data) => callback(data)
+  )
 });
