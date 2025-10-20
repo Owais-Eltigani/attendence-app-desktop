@@ -27,6 +27,6 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   createHotspotSession: (data) => electron.ipcRenderer.invoke("createSession", data),
   updateHotspotSession: (callback) => electron.ipcRenderer.invoke(
     "updateSession",
-    (_event, data) => callback(data)
+    (data) => callback(data)
   )
 });
