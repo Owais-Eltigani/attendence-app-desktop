@@ -1,7 +1,8 @@
-import { app, BrowserWindow, ipcMain, ipcRenderer } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { createHotspot } from "./hotspotManager";
 // import { createHotspot } from "./hotspotManager";
 
 const require = createRequire(import.meta.url);
@@ -76,6 +77,9 @@ app.on("activate", () => {
 
 ipcMain.handle("createSession", async (_event, data) => {
   console.log("🚀 ~ ipcMain.handle ~ data:", data);
+
+  await createHotspot(data);
+
   return "data has been received in main process";
 });
 

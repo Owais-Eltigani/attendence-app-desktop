@@ -30,7 +30,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   createHotspotSession: (data: attendanceRecord) =>
     ipcRenderer.invoke("createSession", data),
   updateHotspotSession: (callback: (data: attendanceRecord) => void) =>
-    ipcRenderer.invoke("updateSession", (_event, data: attendanceRecord) =>
+    ipcRenderer.invoke("updateSession", (data: attendanceRecord) =>
       callback(data)
     ),
 });
