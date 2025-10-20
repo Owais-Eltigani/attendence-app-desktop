@@ -1,14 +1,17 @@
-'use client';
+"use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { QrCode, Download, Share2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { QrCode } from "lucide-react";
+import { sessionCreds } from "@/types";
 
 interface QRCodeDisplayProps {
-  qrCodeData: string;
+  qrCodeData: sessionCreds | null | undefined;
 }
 
 export function QRCodeDisplay({ qrCodeData }: QRCodeDisplayProps) {
+  const ssid = qrCodeData?.ssid;
+  const password = qrCodeData?.password;
+  console.log("🚀 ~ QRCodeDisplay ~ ssid:", ssid, password);
   return (
     <Card className="">
       <CardHeader>
@@ -19,8 +22,8 @@ export function QRCodeDisplay({ qrCodeData }: QRCodeDisplayProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* QR Code Frame */}
-        <div className="aspect-square bg-card border-2 border-dashed border-border rounded-lg flex items-center justify-center">
-          {qrCodeData ? (
+        <div className="bg-card border-2 border-dashed border-border rounded-lg flex items-center justify-center">
+          {ssid && password ? (
             <div className="text-center p-4">
               {/* Placeholder QR Code - In real app, use a QR code library */}
               <div className="w-48 h-48 bg-foreground mx-auto mb-4 rounded-lg flex items-center justify-center">
@@ -29,14 +32,14 @@ export function QRCodeDisplay({ qrCodeData }: QRCodeDisplayProps) {
                     <div
                       key={i}
                       className={`w-2 h-2 ${
-                        Math.random() > 0.5 ? 'bg-background' : 'bg-foreground'
+                        Math.random() > 0.5 ? "bg-background" : "bg-foreground"
                       }`}
                     />
                   ))}
                 </div>
               </div>
               <p className="text-xs text-muted-foreground break-all">
-                Session ID: {qrCodeData}
+                Session ID: {ssid}
               </p>
             </div>
           ) : (
@@ -49,22 +52,14 @@ export function QRCodeDisplay({ qrCodeData }: QRCodeDisplayProps) {
         </div>
 
         {/* Action Buttons */}
-        {qrCodeData && (
-          <div className="space-y-2">
-            <Button
-              variant="outline"
-              className="w-full bg-transparent"
-              size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Download QR Code
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full bg-transparent"
-              size="sm">
-              <Share2 className="h-4 w-4 mr-2" />
-              Share Session
-            </Button>
+        {ssid && password && (
+          <div className="p-3 bg-gray-50 border rounded">
+            <p className="text-sm">
+              SSID: <strong>{ssid}</strong>
+            </p>
+            <p className="text-sm">
+              Password: <strong>{password}</strong>
+            </p>
           </div>
         )}
       </CardContent>

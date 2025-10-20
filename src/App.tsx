@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SessionForm } from "./components/session-form";
 import { QRCodeDisplay } from "./components/qr-code-display";
 import { GraduationCap } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { validateSessionattendanceRecord } from "./utils";
-import { attendanceRecord } from "./types";
+import { attendanceRecord, sessionCreds } from "./types";
 
 export default function StudentAttendanceApp() {
   const [sessionData, setSessionData] = useState<attendanceRecord>({
@@ -16,16 +16,12 @@ export default function StudentAttendanceApp() {
     semester: "",
   });
 
-  const [qrCodeData, setQrCodeData] = useState("");
   const [showAttendance, setShowAttendance] = useState(true);
+  const [hotspotCreds, setHotspotCreds] = useState<sessionCreds | null>(null);
 
   const handleCreateSession = async () => {
     // check form not empty
     if (validateSessionattendanceRecord(sessionData)) {
-      const sessionId = `${sessionData.section}${
-        sessionData.semester
-      }-${Date.now()}`;
-
       try {
         //@ts-expect-error. suppressing ts error for electronAPI
         await window.electronAPI.createHotspotSession(sessionData);
@@ -34,10 +30,21 @@ export default function StudentAttendanceApp() {
       }
 
       //TODO implement the qrcode generation logic here
-      setQrCodeData(sessionId);
       setShowAttendance(true);
     }
   };
+
+  // Listen for hotspot credentials sent from main process
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.electronAPI) return;
+
+    const unsubscribe = window.electronAPI.onHotspotCredentials((creds) => {
+      console.log("Received hotspot creds:", creds);
+      setHotspotCreds(creds);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -55,7 +62,7 @@ export default function StudentAttendanceApp() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="flex gap-6 mb-8">
+      <div className="flex gap-4 mb-4">
         {/* Left Side - Session Form */}
         <div className="flex-1">
           <SessionForm
@@ -66,8 +73,8 @@ export default function StudentAttendanceApp() {
         </div>
 
         {/* Right Side - QR Code Display */}
-        <div className="w-90">
-          <QRCodeDisplay qrCodeData={qrCodeData} />
+        <div className="flex">
+          <QRCodeDisplay qrCodeData={hotspotCreds} />
         </div>
       </div>
 

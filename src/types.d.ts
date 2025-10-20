@@ -4,3 +4,8 @@ export interface attendanceRecord {
   section: string;
   semester: string;
 }
+
+export type sessionCreds = {
+  ssid: string;
+  password: string;
+};

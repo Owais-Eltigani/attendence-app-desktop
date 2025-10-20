@@ -3,6 +3,7 @@ import { platform } from "os";
 import { createHotspotWindows } from "./win";
 import { createHotspotLinux } from "./linux";
 import { createHotspotMac } from "./mac";
+import { BrowserWindow } from "electron";
 
 export async function createHotspot({
   semester,
@@ -21,6 +22,14 @@ export async function createHotspot({
   const ssid = `ATT-${section.toUpperCase().slice(0, 3)}-${timestamp}`;
   const password = `CLASS${classroomNo.toUpperCase().slice(0, 6)}${timestamp}`;
 
+  // Send credentials to the focused renderer window (if any)
+  const focused =
+    BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+  if (focused) {
+    focused.webContents.send("hotspot-credentials", { ssid, password });
+  } else {
+    console.warn("No renderer window available to send hotspot credentials");
+  }
   console.log({ ssid, password });
 
   switch (platform()) {

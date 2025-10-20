@@ -28,5 +28,12 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
   updateHotspotSession: (callback) => electron.ipcRenderer.invoke(
     "updateSession",
     (data) => callback(data)
-  )
+  ),
+  // Dedicated listener for hotspot credentials pushed from main process
+  onHotspotCredentials: (callback) => {
+    const channel = "hotspot-credentials";
+    const listener = (_event, data) => callback(data);
+    electron.ipcRenderer.on(channel, listener);
+    return () => electron.ipcRenderer.off(channel, listener);
+  }
 });

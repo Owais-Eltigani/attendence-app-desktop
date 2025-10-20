@@ -1,4 +1,4 @@
-import { clipboard, shell, dialog, app, BrowserWindow, ipcMain } from "electron";
+import { clipboard, shell, dialog, BrowserWindow, app, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -182,6 +182,12 @@ async function createHotspot({
   const timestamp = Date.now().toString().slice(-4);
   const ssid = `ATT-${section.toUpperCase().slice(0, 3)}-${timestamp}`;
   const password = `CLASS${classroomNo.toUpperCase().slice(0, 6)}${timestamp}`;
+  const focused = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+  if (focused) {
+    focused.webContents.send("hotspot-credentials", { ssid, password });
+  } else {
+    console.warn("No renderer window available to send hotspot credentials");
+  }
   console.log({ ssid, password });
   switch (platform()) {
     case "win32":

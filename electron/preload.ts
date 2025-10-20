@@ -33,4 +33,19 @@ contextBridge.exposeInMainWorld("electronAPI", {
     ipcRenderer.invoke("updateSession", (data: attendanceRecord) =>
       callback(data)
     ),
+  // Dedicated listener for hotspot credentials pushed from main process
+  onHotspotCredentials: (
+    callback: (creds: { ssid: string; password: string }) => void
+  ) => {
+    const channel = "hotspot-credentials";
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: { ssid: string; password: string }
+    ) => callback(data);
+
+    ipcRenderer.on(channel, listener);
+
+    // Return an unsubscribe function
+    return () => ipcRenderer.off(channel, listener);
+  },
 });
