@@ -2,7 +2,7 @@ import { attendanceRecord } from "@/types";
 import { platform } from "os";
 import { createHotspotWindows } from "./win";
 import { createHotspotLinux } from "./linux";
-import { createHotspotMac, createHotspotMacAutoDisconnect } from "./mac";
+import { createHotspotMac } from "./mac";
 
 export async function createHotspot({
   semester,
@@ -16,8 +16,11 @@ export async function createHotspot({
 
   //   check platform and call respective hotspot creation logic
 
-  const ssid = `SESSION-${section.toUpperCase()}-${semester}${Date.now()}`;
-  const password = `@${Date.now()}class#${classroomNo.toUpperCase()}!!`;
+  // Generate shorter, mobile-friendly SSID (max 15 chars)
+  const timestamp = Date.now().toString().slice(-4); // Last 4 digits only
+  const ssid = `ATT-${section.toUpperCase().slice(0, 3)}-${timestamp}`;
+  const password = `CLASS${classroomNo.toUpperCase().slice(0, 6)}${timestamp}`;
+
   console.log({ ssid, password });
 
   switch (platform()) {
@@ -32,10 +35,8 @@ export async function createHotspot({
 
     case "darwin":
       //   await createHotspotMac(ssid, password);
-      //   TODO: testing second mac solution
-      // await createHotspotMac2(ssid, password);
-      // TODO: using auto-disconnect version
-      await createHotspotMacAutoDisconnect(ssid, password);
+      //   TODO: using auto-disconnect version
+      await createHotspotMac(ssid, password);
       break;
 
     default:
