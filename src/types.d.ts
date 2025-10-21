@@ -5,6 +5,12 @@ export interface attendanceRecord {
   semester: string;
 }
 
+export interface studentData {
+  name: string;
+  enrollmentNo: string;
+  timestamp: string;
+}
+
 export type sessionCreds = {
   ssid: string;
   password: string;
