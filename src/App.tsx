@@ -10,10 +10,10 @@ import { attendanceRecord, sessionCreds } from "./types";
 
 export default function StudentAttendanceApp() {
   const [sessionData, setSessionData] = useState<attendanceRecord>({
-    subjectName: "",
-    classroomNo: "",
-    section: "",
-    semester: "",
+    subjectName: "OS",
+    classroomNo: "B101",
+    section: "B",
+    semester: "7",
   });
 
   const [showAttendance, setShowAttendance] = useState(true);

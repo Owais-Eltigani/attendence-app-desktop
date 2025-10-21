@@ -1,6 +1,6 @@
 import { attendanceRecord } from "@/types";
 import { platform } from "os";
-import { createHotspotWindows } from "./win";
+import { createHotspotMyPublicWifi } from "./win";
 import { createHotspotLinux } from "./linux";
 import { createHotspotMac } from "./mac";
 import { BrowserWindow } from "electron";
@@ -34,7 +34,8 @@ export async function createHotspot({
 
   switch (platform()) {
     case "win32":
-      await createHotspotWindows(ssid, password);
+      console.log("calling windows hotspot\n");
+      await createHotspotMyPublicWifi(ssid, password);
 
       break;
 
@@ -43,8 +44,6 @@ export async function createHotspot({
       break;
 
     case "darwin":
-      //   await createHotspotMac(ssid, password);
-      //   TODO: using auto-disconnect version
       await createHotspotMac(ssid, password);
       break;
 

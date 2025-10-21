@@ -1,33 +1,134 @@
-import { clipboard, shell, dialog, BrowserWindow, app, ipcMain } from "electron";
+import { app, clipboard, dialog, shell, BrowserWindow, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import path from "node:path";
+import path$1 from "node:path";
 import { platform } from "os";
 import { exec } from "child_process";
-import { promisify } from "util";
-const execPromise$1 = promisify(exec);
-async function createHotspotWindows(ssid, password) {
+import util, { promisify } from "util";
+import path from "path";
+import fs from "fs";
+import { platform as platform$1 } from "node:os";
+const execPromise$1 = util.promisify(exec);
+async function createHotspotMyPublicWifi(ssid, password) {
+  const isInstalled = isMyPublicWiFiInstalled();
+  if (!isInstalled) {
+    let installerPath = "";
+    const isProduction = app.isPackaged;
+    if (isProduction) {
+      installerPath = path.join(process.resourcesPath, "MyPublicWiFi.exe");
+      //! check production path
+    } else {
+      installerPath = path.join(
+        app.getAppPath(),
+        "resources",
+        "MyPublicWiFi.exe"
+      );
+    }
+    await execPromise$1(`${installerPath}`);
+    return {
+      success: false,
+      message: "MyPublicWiFi is not installed",
+      ssid,
+      password
+    };
+  }
+  await launchMyPublicWiFi(ssid, password);
+}
+function isMyPublicWiFiInstalled() {
+  const myPublicWiFiPath = getMyPublicWiFiPath();
+  return fs.existsSync(myPublicWiFiPath || "");
+}
+async function launchMyPublicWiFi(ssid, password) {
   try {
-    await execPromise$1("netsh wlan stop hostednetwork");
-    const setupCmd = `netsh wlan set hostednetwork mode=allow ssid="${ssid}" key="${password}"`;
-    await execPromise$1(setupCmd);
-    const startCmd = "netsh wlan start hostednetwork";
-    const result = await execPromise$1(startCmd);
-    console.log("✅ Hotspot created:", result.stdout);
+    const myPublicWiFiPath = getMyPublicWiFiPath();
+    if (!fs.existsSync(myPublicWiFiPath || "")) {
+      return {
+        success: false,
+        error: "MyPublicWiFi not found",
+        needsInstall: true
+      };
+    }
+    clipboard.writeText(ssid);
+    await showMyPublicWiFiInstructions(ssid, password);
+    await execPromise$1(`"${myPublicWiFiPath}"`);
     return {
       success: true,
       ssid,
-      message: "Hotspot started successfully"
+      password,
+      message: "MyPublicWiFi launched successfully"
     };
   } catch (error) {
-    console.error("❌ Error creating hotspot:", error);
-    if (error.message.includes("hosted network")) {
-      return {
-        success: false,
-        message: "Your WiFi adapter does not support hosted networks"
-      };
+    console.error("Error launching MyPublicWiFi:", error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+}
+async function showMyPublicWiFiInstructions(ssid, password) {
+  const result = await dialog.showMessageBox({
+    type: "info",
+    title: "📶 Setup MyPublicWiFi",
+    message: "MyPublicWiFi has been launched",
+    detail: `
+follow the steps in the helper tool MyPublicWiFi window:
+
+Network Name (SSID): ${ssid}
+Password: ${password}
+
+Steps:
+1. Copy Network SSID from ASAM and paste it in MyPublicWifi SSID 
+2. Copy Password from ASAM and paste it in MyPublicWifi Password 
+2. Click "Set up and Start Hotspot" button
+3. Wait for "Hotspot is running" message
+    `,
+    buttons: ["Copy SSID", "Copy Password", "Done"]
+  });
+  if (result.response === 0) {
+    clipboard.writeText(ssid);
+    await dialog.showMessageBox({
+      type: "info",
+      title: "Copied!",
+      message: "SSID copied to clipboard",
+      buttons: ["OK"]
+    });
+  } else if (result.response === 1) {
+    clipboard.writeText(password);
+    await dialog.showMessageBox({
+      type: "info",
+      title: "Copied!",
+      message: "Password copied to clipboard",
+      buttons: ["OK"]
+    });
+  }
+  return { success: true };
+}
+function getMyPublicWiFiPath() {
+  const possiblePaths = [
+    // Common installation paths
+    "C:\\Program Files\\MyPublicWiFi\\MyPublicWiFi.exe",
+    "C:\\Program Files (x86)\\MyPublicWiFi\\MyPublicWiFi.exe",
+    path.join(process.env.PROGRAMFILES, "MyPublicWiFi", "MyPublicWiFi.exe"),
+    path.join(
+      process.env["PROGRAMFILES(X86)"],
+      "MyPublicWiFi",
+      "MyPublicWiFi.exe"
+    )
+  ];
+  for (const execPath of possiblePaths) {
+    if (fs.existsSync(execPath)) {
+      return execPath;
     }
-    throw error;
+  }
+  return null;
+}
+async function stopMyPublicWiFi() {
+  try {
+    await execPromise$1("taskkill /F /IM MyPublicWiFi.exe");
+    return { success: true };
+  } catch (error) {
+    console.error("Error stopping MyPublicWiFi:", error);
+    return { success: false, error: error.message };
   }
 }
 const execPromise = promisify(exec);
@@ -191,7 +292,8 @@ async function createHotspot({
   console.log({ ssid, password });
   switch (platform()) {
     case "win32":
-      await createHotspotWindows(ssid, password);
+      console.log("calling windows hotspot\n");
+      await createHotspotMyPublicWifi(ssid, password);
       break;
     case "linux":
       await createHotspotLinux(ssid, password);
@@ -204,22 +306,49 @@ async function createHotspot({
       return;
   }
 }
-createRequire(import.meta.url);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-process.env.APP_ROOT = path.join(__dirname, "..");
+const require2 = createRequire(import.meta.url);
+const __dirname = path$1.dirname(fileURLToPath(import.meta.url));
+if (process.platform === "win32") {
+  const { execSync } = require2("child_process");
+  const isAdmin = () => {
+    try {
+      execSync("net session 2>nul", { stdio: "ignore" });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const isDev = process.argv.includes("--no-sandbox");
+  if (!isDev && !isAdmin()) {
+    console.log(
+      "🔐 App needs admin privileges. Please restart with admin rights."
+    );
+    const { dialog: dialog2 } = require2("electron");
+    app.whenReady().then(() => {
+      dialog2.showErrorBox(
+        "Administrator Rights Required",
+        "This app requires administrator privileges to create hotspots.\n\nPlease right-click the app and select 'Run as administrator'."
+      );
+      app.quit();
+    });
+  } else if (!isDev) {
+    console.log("✅ Running with administrator privileges");
+  }
+}
+process.env.APP_ROOT = path$1.join(__dirname, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+const MAIN_DIST = path$1.join(process.env.APP_ROOT, "dist-electron");
+const RENDERER_DIST = path$1.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path$1.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
 let win;
 function createWindow() {
   win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: path$1.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     height: 1e3,
     width: 1e3,
     resizable: false,
     webPreferences: {
-      preload: path.join(__dirname, "preload.mjs")
+      preload: path$1.join(__dirname, "preload.mjs")
       // Use plugin 'vite-electron-plugin' to enable nodeIntegration
       // More info:
     }
@@ -230,11 +359,14 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    win.loadFile(path.join(RENDERER_DIST, "index.html"));
+    win.loadFile(path$1.join(RENDERER_DIST, "index.html"));
   }
 }
-app.on("window-all-closed", () => {
+app.on("window-all-closed", async () => {
   if (process.platform !== "darwin") {
+    if (platform$1() === "win32") {
+      await stopMyPublicWiFi();
+    }
     app.quit();
     win = null;
   }
