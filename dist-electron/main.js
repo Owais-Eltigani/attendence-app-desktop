@@ -219,8 +219,8 @@ async function createHotspotMac(ssid, password) {
     shell.openExternal(
       "x-apple.systempreferences:com.apple.preferences.sharing"
     );
-    await new Promise((resolve) => setTimeout(resolve, 1500));
     const buttons = ["Copy SSID", "Copy Password", "Done"];
+    await new Promise((resolve) => setTimeout(resolve, 1700));
     const result = await dialog.showMessageBox({
       type: "info",
       title: "Hotspot Setup Ready",

@@ -62,9 +62,9 @@ export default function StudentAttendanceApp() {
       </div>
 
       {/* Main Content Grid */}
-      <div className="flex gap-4 mb-4">
+      <div className=" flex gap-4 mb-4">
         {/* Left Side - Session Form */}
-        <div className="flex-1">
+        <div className="flex-1/2">
           <SessionForm
             sessionData={sessionData}
             setSessionData={setSessionData}
@@ -73,7 +73,7 @@ export default function StudentAttendanceApp() {
         </div>
 
         {/* Right Side - QR Code Display */}
-        <div className="flex">
+        <div className="flex-1/2">
           <QRCodeDisplay qrCodeData={hotspotCreds} />
         </div>
       </div>

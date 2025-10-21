@@ -5,6 +5,7 @@ import { Check, Copy, QrCode } from "lucide-react";
 import { sessionCreds } from "@/types";
 import { Button } from "./ui/button";
 import { useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
 
 interface QRCodeDisplayProps {
   qrCodeData: sessionCreds | null | undefined;
@@ -39,46 +40,54 @@ export function QRCodeDisplay({ qrCodeData }: QRCodeDisplayProps) {
         {/* QR Code Frame */}
         <div className="bg-card border-2 border-dashed border-border rounded-lg flex items-center justify-center">
           {ssid && password ? (
-            <div className="text-center p-4">
+            <div className="text-center p-2">
               {/* Placeholder QR Code - In real app, use a QR code library */}
-              <div className="w-48 h-48 bg-foreground mx-auto mb-4 rounded-lg flex items-center justify-center">
-                <div className="grid grid-cols-8 gap-1 p-4">
-                  {Array.from({ length: 64 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-2 h-2 ${
-                        Math.random() > 0.5 ? "bg-background" : "bg-foreground"
-                      }`}
-                    />
-                  ))}
+              <div className="w-44 h-44 bg-foreground mx-auto mb-4 rounded-lg flex items-center justify-center">
+                <div className=" gap-1 ">
+                  <QRCodeSVG
+                    value={`WIFI:T:WPA2;S:${ssid};P:${password};;`}
+                    size={130}
+                    bgColor={"#ffffff"}
+                    fgColor={"#000000"}
+                    level={"H"}
+                    includeMargin={false}
+                  />
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground break-all">
-                Session ID: {ssid}
-              </p>
             </div>
           ) : (
-            <div className="text-center text-muted-foreground">
-              <QrCode className="h-16 w-16 mx-auto mb-4 opacity-50" />
-              <p className="text-sm">QR Code will appear here</p>
-              <p className="text-xs">Create a session to generate</p>
+            <div className="w-48 h-48 bg-foreground mx-auto mb-4 rounded-lg flex items-center justify-center">
+              <div className="grid grid-cols-8 gap-1 p-4">
+                {Array.from({ length: 64 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-2 h-2 ${
+                      Math.random() > 0.5 ? "bg-background" : "bg-foreground"
+                    }`}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>
+        <p className="text-xs text-muted-foreground break-all">
+          Session ID: {ssid || ""}
+        </p>
 
         {/* Action Buttons */}
-        {ssid && password && (
+        {
           <div className="space-y-2">
             {/* SSID */}
             <div className="flex items-center justify-between p-3 bg-gray-50 border rounded">
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground">SSID</p>
-                <p className="text-sm font-medium">{ssid}</p>
+                <p className="text-sm font-medium">{ssid || ""}</p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleCopy(ssid, "ssid")}
+                disabled={!ssid}
+                onClick={() => ssid && handleCopy(ssid, "ssid")}
                 className="ml-2"
               >
                 {copiedField === "ssid" ? (
@@ -92,12 +101,13 @@ export function QRCodeDisplay({ qrCodeData }: QRCodeDisplayProps) {
             <div className="flex items-center justify-between p-3 bg-gray-50 border rounded">
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground">Password</p>
-                <p className="text-sm font-medium">{password}</p>
+                <p className="text-sm font-medium">{password || ""}</p>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleCopy(password, "password")}
+                disabled={!password}
+                onClick={() => password && handleCopy(password, "password")}
                 className="ml-2"
               >
                 {copiedField === "password" ? (
@@ -108,7 +118,7 @@ export function QRCodeDisplay({ qrCodeData }: QRCodeDisplayProps) {
               </Button>
             </div>
           </div>
-        )}
+        }
       </CardContent>
     </Card>
   );

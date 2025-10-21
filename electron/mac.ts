@@ -70,11 +70,11 @@ export async function createHotspotMac(ssid: string, password: string) {
     );
 
     // Wait a moment for window to open
-    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     // Show simplified instructions
     const buttons = ["Copy SSID", "Copy Password", "Done"];
 
+    await new Promise((resolve) => setTimeout(resolve, 1700));
     const result = await dialog.showMessageBox({
       type: "info",
       title: "Hotspot Setup Ready",
