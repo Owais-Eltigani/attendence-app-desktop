@@ -37,12 +37,12 @@ export async function createHotspotMyPublicWifi(
     return {
       success: false,
       message: "MyPublicWiFi is not installed",
-      ssid,
-      password,
+      ssid: "",
+      password: "",
     };
   }
   // launch MyPublicWiFi with ssid and password
-  await launchMyPublicWiFi(ssid, password);
+  return await launchMyPublicWiFi(ssid, password);
 }
 
 // Check if MyPublicWiFi is installed
@@ -79,7 +79,9 @@ async function launchMyPublicWiFi(ssid: string, password: string) {
     console.error("Error launching MyPublicWiFi:", error);
     return {
       success: false,
-      error: error.message,
+      message: error.message,
+      ssid: "",
+      password: "",
     };
   }
 }

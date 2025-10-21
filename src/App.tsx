@@ -24,6 +24,7 @@ export default function StudentAttendanceApp() {
     if (validateSessionattendanceRecord(sessionData)) {
       try {
         //@ts-expect-error. suppressing ts error for electronAPI
+
         await window.electronAPI.createHotspotSession(sessionData);
       } catch (error) {
         console.log("🚀 ~ handleCreateSession ~ error:", error);
@@ -73,7 +74,7 @@ export default function StudentAttendanceApp() {
         </div>
 
         {/* Right Side - QR Code Display */}
-        <div className="flex-1/2">
+        <div className="flex-1">
           <QRCodeDisplay qrCodeData={hotspotCreds} />
         </div>
       </div>

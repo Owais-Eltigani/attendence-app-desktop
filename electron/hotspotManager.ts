@@ -35,17 +35,13 @@ export async function createHotspot({
   switch (platform()) {
     case "win32":
       console.log("calling windows hotspot\n");
-      await createHotspotMyPublicWifi(ssid, password);
-
-      break;
+      return await createHotspotMyPublicWifi(ssid, password);
 
     case "linux":
-      await createHotspotLinux(ssid, password);
-      break;
+      return await createHotspotLinux(ssid, password);
 
     case "darwin":
-      await createHotspotMac(ssid, password);
-      break;
+      return await createHotspotMac(ssid, password);
 
     default:
       console.log("Unsupported platform for hotspot creation");

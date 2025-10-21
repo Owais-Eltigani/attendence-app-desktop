@@ -48,18 +48,18 @@ export async function createHotspotLinux(ssid: string, password: string) {
 
     return {
       success: true,
-      platform: "linux",
       ssid,
-      interface: wifiInterface,
+      password,
       message: "Hotspot started successfully",
     };
   } catch (error) {
     console.error("❌ Linux hotspot error:", error);
     return {
       success: false,
-      platform: "linux",
+      ssid: "",
+      password: "",
       // @ts-expect-error suppressing ts error for error.message
-      error: error.message,
+      message: error.message,
     };
   }
 }

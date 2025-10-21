@@ -28,11 +28,11 @@ async function createHotspotMyPublicWifi(ssid, password) {
     return {
       success: false,
       message: "MyPublicWiFi is not installed",
-      ssid,
-      password
+      ssid: "",
+      password: ""
     };
   }
-  await launchMyPublicWiFi(ssid, password);
+  return await launchMyPublicWiFi(ssid, password);
 }
 function isMyPublicWiFiInstalled() {
   const myPublicWiFiPath = getMyPublicWiFiPath();
@@ -61,7 +61,9 @@ async function launchMyPublicWiFi(ssid, password) {
     console.error("Error launching MyPublicWiFi:", error);
     return {
       success: false,
-      error: error.message
+      message: error.message,
+      ssid: "",
+      password: ""
     };
   }
 }
@@ -164,18 +166,18 @@ async function createHotspotLinux(ssid, password) {
     console.log("✅ Linux hotspot created");
     return {
       success: true,
-      platform: "linux",
       ssid,
-      interface: wifiInterface,
+      password,
       message: "Hotspot started successfully"
     };
   } catch (error) {
     console.error("❌ Linux hotspot error:", error);
     return {
       success: false,
-      platform: "linux",
+      ssid: "",
+      password: "",
       // @ts-expect-error suppressing ts error for error.message
-      error: error.message
+      message: error.message
     };
   }
 }
@@ -257,16 +259,17 @@ Password: ${password}
     }
     return {
       success: true,
-      platform: "mac",
-      manualSetup: true,
       ssid,
-      autoDisconnected: true
+      password,
+      message: "Hotspot setup instructions displayed"
     };
   } catch (error) {
     console.error("macOS auto-disconnect hotspot setup error:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error"
+      ssid: "",
+      password: "",
+      message: error instanceof Error ? error.message : "Unknown error"
     };
   }
 }
@@ -293,14 +296,11 @@ async function createHotspot({
   switch (platform()) {
     case "win32":
       console.log("calling windows hotspot\n");
-      await createHotspotMyPublicWifi(ssid, password);
-      break;
+      return await createHotspotMyPublicWifi(ssid, password);
     case "linux":
-      await createHotspotLinux(ssid, password);
-      break;
+      return await createHotspotLinux(ssid, password);
     case "darwin":
-      await createHotspotMac(ssid, password);
-      break;
+      return await createHotspotMac(ssid, password);
     default:
       console.log("Unsupported platform for hotspot creation");
       return;
@@ -378,8 +378,7 @@ app.on("activate", () => {
 });
 ipcMain.handle("createSession", async (_event, data) => {
   console.log("🚀 ~ ipcMain.handle ~ data:", data);
-  await createHotspot(data);
-  return "data has been received in main process";
+  return await createHotspot(data);
 });
 app.whenReady().then(createWindow);
 export {

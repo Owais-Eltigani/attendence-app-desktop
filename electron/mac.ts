@@ -114,16 +114,17 @@ Password: ${password}
 
     return {
       success: true,
-      platform: "mac",
-      manualSetup: true,
       ssid,
-      autoDisconnected: true,
+      password,
+      message: "Hotspot setup instructions displayed",
     };
   } catch (error) {
     console.error("macOS auto-disconnect hotspot setup error:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      ssid: "",
+      password: "",
+      message: error instanceof Error ? error.message : "Unknown error",
     };
   }
 }

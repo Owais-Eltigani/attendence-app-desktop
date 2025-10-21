@@ -107,9 +107,7 @@ app.on("activate", () => {
 ipcMain.handle("createSession", async (_event, data) => {
   console.log("🚀 ~ ipcMain.handle ~ data:", data);
 
-  await createHotspot(data);
-
-  return "data has been received in main process";
+  return await createHotspot(data);
 });
 
 app.whenReady().then(createWindow);
