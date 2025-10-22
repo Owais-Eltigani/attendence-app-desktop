@@ -7,6 +7,7 @@ import { GraduationCap } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { validateSessionattendanceRecord } from "./utils";
 import { attendanceRecord, sessionCreds } from "./types";
+import { startAttendanceServer } from "./lib/server";
 
 export default function StudentAttendanceApp() {
   const [sessionData, setSessionData] = useState<attendanceRecord>({
@@ -25,7 +26,17 @@ export default function StudentAttendanceApp() {
       try {
         //@ts-expect-error. suppressing ts error for electronAPI
 
-        await window.electronAPI.createHotspotSession(sessionData);
+        const result = await window.electronAPI.createHotspotSession(
+          sessionData
+        );
+
+        //? if the hotspot was created successfully, start the attendance server
+        if (result) {
+          const sessionId = `${sessionData.subjectName
+            .toUpperCase()
+            .slice(0, 3)}${sessionData.section.toUpperCase()}`;
+          startAttendanceServer(sessionId);
+        }
       } catch (error) {
         console.log("🚀 ~ handleCreateSession ~ error:", error);
       }
