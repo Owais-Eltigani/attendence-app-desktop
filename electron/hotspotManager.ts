@@ -34,10 +34,12 @@ export async function createHotspot({
   switch (platform()) {
     case "win32":
       console.log("calling windows hotspot\n");
-      await createHotspotMyPublicWifi(ssid, password);
+
+      //? in windows start the webserver before launching myPublicWifi.
       startAttendanceServer(
         `${section.toUpperCase().slice(0, 3)}-${timestamp}`
       );
+      await createHotspotMyPublicWifi(ssid, password);
       break;
 
     case "linux":

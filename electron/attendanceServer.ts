@@ -32,6 +32,7 @@ function getLocalIPAddress() {
 
 // Start server to receive attendance
 export function startAttendanceServer(sessionId: string, port = 8080) {
+  console.log("Starting attendance server");
   attendanceData = [];
 
   attendanceServer = http.createServer((req, res) => {
@@ -134,7 +135,8 @@ export function startAttendanceServer(sessionId: string, port = 8080) {
   });
 
   attendanceServer.listen(port, () => {
-    const ip = getLocalIPAddress();
+    // const ip = getLocalIPAddress();
+    const ip = "192.168.137.1";
     console.log(`\n${"=".repeat(60)}`);
     console.log(`📡 Attendance Server Started`);
     console.log(`${"=".repeat(60)}`);
@@ -145,7 +147,7 @@ export function startAttendanceServer(sessionId: string, port = 8080) {
   });
 
   return {
-    ip: getLocalIPAddress(),
+    ip: "192.168.137.1",
     port,
   };
 }

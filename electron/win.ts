@@ -161,6 +161,7 @@ function getMyPublicWiFiPath() {
 // Stop MyPublicWiFi
 export async function stopMyPublicWiFi() {
   try {
+    console.log("trying to kill myPublic Wifi");
     await execPromise("taskkill /F /IM MyPublicWiFi.exe"); //? use sudo.exe()
     return { success: true };
   } catch (error) {

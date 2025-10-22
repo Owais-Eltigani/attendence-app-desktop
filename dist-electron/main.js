@@ -2,7 +2,7 @@ import { app, clipboard, dialog, shell, BrowserWindow, ipcMain } from "electron"
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path$1 from "node:path";
-import os, { platform } from "os";
+import { platform } from "os";
 import { exec } from "child_process";
 import util, { promisify } from "util";
 import path from "path";
@@ -127,6 +127,7 @@ function getMyPublicWiFiPath() {
 }
 async function stopMyPublicWiFi() {
   try {
+    console.log("trying to kill myPublic Wifi");
     await execPromise$1("taskkill /F /IM MyPublicWiFi.exe");
     return { success: true };
   } catch (error) {
@@ -276,21 +277,8 @@ Paste this in the "Password" field.`,
 //!
 let attendanceServer = null;
 let attendanceData = [];
-function getLocalIPAddress() {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    const iface = interfaces[name];
-    if (!iface) continue;
-    for (const address of iface) {
-      console.log("🚀 ~ getLocalIPAddress ~ address:", address);
-      if (address.family === "IPv4" && !address.internal) {
-        return address.address;
-      }
-    }
-  }
-  return "192.168.137.1";
-}
 function startAttendanceServer(sessionId, port = 8080) {
+  console.log("Starting attendance server");
   attendanceData = [];
   attendanceServer = http.createServer((req, res) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -376,7 +364,7 @@ function startAttendanceServer(sessionId, port = 8080) {
     }
   });
   attendanceServer.listen(port, () => {
-    const ip = getLocalIPAddress();
+    const ip = "192.168.137.1";
     console.log(`
 ${"=".repeat(60)}`);
     console.log(`📡 Attendance Server Started`);
@@ -388,7 +376,7 @@ ${"=".repeat(60)}`);
 `);
   });
   return {
-    ip: getLocalIPAddress(),
+    ip: "192.168.137.1",
     port
   };
 }
@@ -421,10 +409,10 @@ async function createHotspot({
   switch (platform()) {
     case "win32":
       console.log("calling windows hotspot\n");
-      await createHotspotMyPublicWifi(ssid, password);
       startAttendanceServer(
         `${section.toUpperCase().slice(0, 3)}-${timestamp}`
       );
+      await createHotspotMyPublicWifi(ssid, password);
       break;
     case "linux":
       await createHotspotLinux(ssid, password);
