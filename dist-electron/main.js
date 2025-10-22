@@ -2,11 +2,12 @@ import { app, clipboard, dialog, shell, BrowserWindow, ipcMain } from "electron"
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path$1 from "node:path";
-import { platform } from "os";
+import os, { platform } from "os";
 import { exec } from "child_process";
 import util, { promisify } from "util";
 import path from "path";
 import fs from "fs";
+import http from "http";
 import { platform as platform$1 } from "node:os";
 const execPromise$1 = util.promisify(exec);
 async function createHotspotMyPublicWifi(ssid, password) {
@@ -273,6 +274,131 @@ Paste this in the "Password" field.`,
   }
 }
 //!
+let attendanceServer = null;
+let attendanceData = [];
+function getLocalIPAddress() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    const iface = interfaces[name];
+    if (!iface) continue;
+    for (const address of iface) {
+      console.log("🚀 ~ getLocalIPAddress ~ address:", address);
+      if (address.family === "IPv4" && !address.internal) {
+        return address.address;
+      }
+    }
+  }
+  return "192.168.137.1";
+}
+function startAttendanceServer(sessionId, port = 8080) {
+  attendanceData = [];
+  attendanceServer = http.createServer((req, res) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") {
+      res.writeHead(200);
+      res.end();
+      return;
+    }
+    if (req.method === "GET" && req.url === "/") {
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Attendance Server</title>
+            <style>
+              body { 
+                font-family: Arial; 
+                text-align: center; 
+                padding: 50px;
+                background: #f0f0f0;
+              }
+              .card {
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                max-width: 400px;
+                margin: 0 auto;
+              }
+              h1 { color: #4CAF50; }
+              .status { font-size: 48px; margin: 20px 0; }
+              .info { color: #666; margin: 10px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h1>Server Online</h1>
+              <p class="info">Attendance server is running</p>
+              <p class="info"><strong>Session ID:</strong> ${sessionId}</p>
+              <p class="info"><strong>Time:</strong> ${(/* @__PURE__ */ new Date()).toLocaleString()}</p>
+              <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+              <p style="font-size: 12px; color: #999;">
+                POST to /submit-attendance to record attendance
+              </p>
+            </div>
+          </body>
+        </html>
+      `);
+      return;
+    }
+    if (req.method === "POST" && req.url === "/submit-attendance") {
+      let body = "";
+      req.on("data", (chunk) => {
+        body += chunk.toString();
+      });
+      req.on("end", () => {
+        try {
+          const studentData = JSON.parse(body);
+          if (studentData.sessionId !== sessionId) {
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: "Invalid session" }));
+            return;
+          }
+          studentData.submittedAt = (/* @__PURE__ */ new Date()).toISOString();
+          attendanceData.push(studentData);
+          console.log("Attendance received:", studentData);
+          res.writeHead(200);
+          res.end(
+            JSON.stringify({ success: true, message: "Attendance recorded" })
+          );
+        } catch (error) {
+          res.writeHead(400);
+          res.end(JSON.stringify({ error: "Invalid data" }));
+        }
+      });
+    } else {
+      res.writeHead(404);
+      res.end();
+    }
+  });
+  attendanceServer.listen(port, () => {
+    const ip = getLocalIPAddress();
+    console.log(`
+${"=".repeat(60)}`);
+    console.log(`📡 Attendance Server Started`);
+    console.log(`${"=".repeat(60)}`);
+    console.log(`🌐 Server URL: http://${ip}:${port}`);
+    console.log(`📱 Test in phone browser: http://${ip}:${port}`);
+    console.log(`📋 Session ID: ${sessionId}`);
+    console.log(`${"=".repeat(60)}
+`);
+  });
+  return {
+    ip: getLocalIPAddress(),
+    port
+  };
+}
+function stopAttendanceServer() {
+  if (attendanceServer) {
+    attendanceServer.close();
+    attendanceServer = null;
+    console.log("📡 Attendance server stopped");
+  }
+}
 async function createHotspot({
   semester,
   section,
@@ -295,14 +421,26 @@ async function createHotspot({
   switch (platform()) {
     case "win32":
       console.log("calling windows hotspot\n");
-      return await createHotspotMyPublicWifi(ssid, password);
+      await createHotspotMyPublicWifi(ssid, password);
+      startAttendanceServer(
+        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
+      );
+      break;
     case "linux":
-      return await createHotspotLinux(ssid, password);
+      await createHotspotLinux(ssid, password);
+      startAttendanceServer(
+        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
+      );
+      break;
     case "darwin":
-      return await createHotspotMac(ssid, password);
+      await createHotspotMac(ssid, password);
+      startAttendanceServer(
+        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
+      );
+      break;
     default:
       console.log("Unsupported platform for hotspot creation");
-      return;
+      break;
   }
 }
 const require2 = createRequire(import.meta.url);
@@ -369,6 +507,7 @@ app.on("window-all-closed", async () => {
     app.quit();
     win = null;
   }
+  stopAttendanceServer();
 });
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
