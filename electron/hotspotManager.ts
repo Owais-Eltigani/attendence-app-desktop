@@ -50,10 +50,10 @@ export async function createHotspot({
       break;
 
     case "darwin":
-      await createHotspotMac(ssid, password);
-      startAttendanceServer(
+      await startAttendanceServer(
         `${section.toUpperCase().slice(0, 3)}-${timestamp}`
       );
+      await createHotspotMac(ssid, password);
       break;
 
     default:
