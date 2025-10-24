@@ -7,6 +7,7 @@ import { GraduationCap } from "lucide-react";
 import { Button } from "./components/ui/button";
 import { validateSessionattendanceRecord } from "./utils";
 import { attendanceRecord, sessionCreds } from "./types";
+import Tabular from "./components/tabular-data";
 
 export default function StudentAttendanceApp() {
   const [sessionData, setSessionData] = useState<attendanceRecord>({
@@ -79,18 +80,7 @@ export default function StudentAttendanceApp() {
       </div>
 
       {/* Bottom - Attendance Table */}
-      {showAttendance && (
-        <div className="bg-white border border-gray-200 rounded-lg h-96 shadow-sm">
-          {/* Empty white box for future content */}
-          <h1 className="text-lg font-semibold p-4 text-center text-gray-500">
-            Students Names, Enr no. in Tabular Format
-          </h1>
-        </div>
-      )}
-      <div className="flex flex-row justify-end mt-4 space-x-2  p-2">
-        <Button>Export as Excel</Button>
-        <Button>Export as CSV</Button>
-      </div>
+      {showAttendance && <Tabular />}
     </div>
   );
 }
