@@ -48,4 +48,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
     // Return an unsubscribe function
     return () => ipcRenderer.off(channel, listener);
   },
+
+  // Save Excel file with directory creation
+  saveExcelFile: (
+    fileBuffer: ArrayBuffer,
+    fileName: string,
+    folderPath: string
+  ) =>
+    ipcRenderer.invoke("save-excel-file", { fileBuffer, fileName, folderPath }),
 });

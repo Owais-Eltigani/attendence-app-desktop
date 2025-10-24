@@ -20,96 +20,96 @@ export const rowData = [
     No: 3,
     "Student Name": "Alice Johnson",
     "Enrollment No": "ENR003",
-    "Submitted at": "2024-10-01 10:10 AM",
+    "Submitted at": "10:10 AM",
   },
   {
     No: 4,
     "Student Name": "Bob Brown",
     "Enrollment No": "ENR004",
-    "Submitted at": "2024-10-01 10:15 AM",
+    "Submitted at": "10:15 AM",
   },
 
   {
     No: 5,
     "Student Name": "Charlie Davis",
     "Enrollment No": "ENR005",
-    "Submitted at": "2024-10-01 10:20 AM",
+    "Submitted at": "10:20 AM",
   },
 
   {
     No: 1,
     "Student Name": "John Doe",
     "Enrollment No": "ENR001",
-    "Submitted at": "2024-10-01 10:00 AM",
+    "Submitted at": "10:00 AM",
   },
   {
     No: 2,
     "Student Name": "Jane Smith",
     "Enrollment No": "ENR002",
-    "Submitted at": "2024-10-01 10:05 AM",
+    "Submitted at": "10:05 AM",
   },
   {
     No: 3,
     "Student Name": "Alice Johnson",
     "Enrollment No": "ENR003",
-    "Submitted at": "2024-10-01 10:10 AM",
+    "Submitted at": "10:10 AM",
   },
   {
     No: 4,
     "Student Name": "Bob Brown",
     "Enrollment No": "ENR004",
-    "Submitted at": "2024-10-01 10:15 AM",
+    "Submitted at": "10:15 AM",
   },
 
   {
     No: 5,
     "Student Name": "Charlie Davis",
     "Enrollment No": "ENR005",
-    "Submitted at": "2024-10-01 10:20 AM",
+    "Submitted at": "10:20 AM",
   },
   {
     No: 1,
     "Student Name": "John Doe",
     "Enrollment No": "ENR001",
-    "Submitted at": "2024-10-01 10:00 AM",
+    "Submitted at": "10:00 AM",
   },
   {
     No: 2,
     "Student Name": "Jane Smith",
     "Enrollment No": "ENR002",
-    "Submitted at": "2024-10-01 10:05 AM",
+    "Submitted at": "10:05 AM",
   },
   {
     No: 3,
     "Student Name": "Alice Johnson",
     "Enrollment No": "ENR003",
-    "Submitted at": "2024-10-01 10:10 AM",
+    "Submitted at": "10:10 AM",
   },
   {
     No: 4,
     "Student Name": "Bob Brown",
     "Enrollment No": "ENR004",
-    "Submitted at": "2024-10-01 10:15 AM",
+    "Submitted at": "10:15 AM",
   },
 
   {
     No: 5,
     "Student Name": "Charlie Davis",
     "Enrollment No": "ENR005",
-    "Submitted at": "2024-10-01 10:20 AM",
+    "Submitted at": "10:20 AM",
   },
 
   {
     No: 1,
     "Student Name": "John Doe",
     "Enrollment No": "ENR001",
-    "Submitted at": "2024-10-01 10:00 AM",
+    "Submitted at": "10:00 AM",
   },
   {
     No: 2,
     "Student Name": "Jane Smith",
     "Enrollment No": "ENR002",
-    "Submitted at": "2024-10-01 10:05 AM",
+    "Submitted at": "10:05 AM",
   },
 ];
 

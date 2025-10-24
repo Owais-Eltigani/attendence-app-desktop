@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain, shell, dialog } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
@@ -6,6 +6,8 @@ import { createHotspot } from "./hotspotManager";
 import { platform } from "node:os";
 import { stopMyPublicWiFi } from "./win";
 import { stopAttendanceServer } from "./attendanceServer";
+import fs from "fs";
+import os from "os";
 import { stopHotspotLinux } from "./linux";
 
 const require = createRequire(import.meta.url);
@@ -117,5 +119,46 @@ ipcMain.handle("createSession", async (_event, data) => {
 
   return await createHotspot(data);
 });
+
+// Handle saving Excel file with directory creation
+ipcMain.handle(
+  "save-excel-file",
+  async (_event, { fileBuffer, fileName, folderPath }) => {
+    try {
+      // Get appropriate base directory based on OS
+
+      const baseDir = path.join(os.homedir(), "Documents", "Attendance");
+
+      // Create full path with session-based folder structure
+      const fullDir = path.join(baseDir, folderPath);
+
+      // Create directories recursively (works on all OS)
+      fs.mkdirSync(fullDir, { recursive: true });
+
+      // Full file path
+      const filePath = path.join(fullDir, fileName);
+
+      // Convert buffer back to Uint8Array and write file
+      const buffer = Buffer.from(fileBuffer);
+      fs.writeFileSync(filePath, buffer);
+
+      console.log(`✅ File saved successfully: ${filePath}`);
+
+      // Open file explorer and highlight the file
+      shell.showItemInFolder(filePath);
+
+      return {
+        success: true,
+        path: filePath,
+      };
+    } catch (error) {
+      console.error("❌ Error saving file:", error);
+      return {
+        success: false,
+        error: String(error),
+      };
+    }
+  }
+);
 
 app.whenReady().then(createWindow);

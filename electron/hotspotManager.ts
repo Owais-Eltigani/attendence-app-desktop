@@ -29,6 +29,9 @@ export async function createHotspot({
   } else {
     console.warn("No renderer window available to send hotspot credentials");
   }
+
+  //
+  const sessionId = `${section.toUpperCase().slice(0, 3)}-${timestamp}`;
   console.log({ ssid, password });
 
   switch (platform()) {
@@ -36,23 +39,17 @@ export async function createHotspot({
       console.log("calling windows hotspot\n");
 
       //? in windows start the webserver before launching myPublicWifi.
-      startAttendanceServer(
-        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
-      );
+      startAttendanceServer(sessionId);
       await createHotspotMyPublicWifi(ssid, password);
       break;
 
     case "linux":
       await createHotspotLinux(ssid, password);
-      startAttendanceServer(
-        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
-      );
+      startAttendanceServer(sessionId);
       break;
 
     case "darwin":
-      await startAttendanceServer(
-        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
-      );
+      await startAttendanceServer(sessionId);
       await createHotspotMac(ssid, password);
       break;
 

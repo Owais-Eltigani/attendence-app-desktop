@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import { SessionForm } from "./components/session-form";
 import { QRCodeDisplay } from "./components/qr-code-display";
 import { GraduationCap } from "lucide-react";
-import { Button } from "./components/ui/button";
 import { validateSessionattendanceRecord } from "./utils";
 import { attendanceRecord, sessionCreds } from "./types";
 import Tabular from "./components/tabular-data";
+import { SessionContext } from "./contexts/SessionContext";
 
 export default function StudentAttendanceApp() {
   const [sessionData, setSessionData] = useState<attendanceRecord>({
@@ -48,39 +48,42 @@ export default function StudentAttendanceApp() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <GraduationCap className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold text-foreground">
-            Student Attendance System
-          </h1>
+    <SessionContext.Provider value={sessionData}>
+      <div className="min-h-screen bg-background p-6">
+        {/* Header */}
+
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <GraduationCap className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold text-foreground">
+              Student Attendance System
+            </h1>
+          </div>
+          <p className="text-muted-foreground">
+            Create and manage student sessions for attendance tracking
+          </p>
         </div>
-        <p className="text-muted-foreground">
-          Create and manage student sessions for attendance tracking
-        </p>
+
+        {/* Main Content Grid */}
+        <div className=" flex gap-4 mb-4">
+          {/* Left Side - Session Form */}
+          <div className="flex-1/2">
+            <SessionForm
+              sessionData={sessionData}
+              setSessionData={setSessionData}
+              onCreateSession={handleCreateSession}
+            />
+          </div>
+
+          {/* Right Side - QR Code Display */}
+          <div className="flex-1">
+            <QRCodeDisplay qrCodeData={hotspotCreds} />
+          </div>
+        </div>
+
+        {/* Bottom - Attendance Table */}
+        {showAttendance && <Tabular />}
       </div>
-
-      {/* Main Content Grid */}
-      <div className=" flex gap-4 mb-4">
-        {/* Left Side - Session Form */}
-        <div className="flex-1/2">
-          <SessionForm
-            sessionData={sessionData}
-            setSessionData={setSessionData}
-            onCreateSession={handleCreateSession}
-          />
-        </div>
-
-        {/* Right Side - QR Code Display */}
-        <div className="flex-1">
-          <QRCodeDisplay qrCodeData={hotspotCreds} />
-        </div>
-      </div>
-
-      {/* Bottom - Attendance Table */}
-      {showAttendance && <Tabular />}
-    </div>
+    </SessionContext.Provider>
   );
 }

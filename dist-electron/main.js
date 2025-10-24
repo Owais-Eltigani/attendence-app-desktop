@@ -399,25 +399,20 @@ async function createHotspot({
   } else {
     console.warn("No renderer window available to send hotspot credentials");
   }
+  const sessionId = `${section.toUpperCase().slice(0, 3)}-${timestamp}`;
   console.log({ ssid, password });
   switch (platform()) {
     case "win32":
       console.log("calling windows hotspot\n");
-      startAttendanceServer(
-        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
-      );
+      startAttendanceServer(sessionId);
       await createHotspotMyPublicWifi(ssid, password);
       break;
     case "linux":
       await createHotspotLinux(ssid, password);
-      startAttendanceServer(
-        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
-      );
+      startAttendanceServer(sessionId);
       break;
     case "darwin":
-      await startAttendanceServer(
-        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
-      );
+      await startAttendanceServer(sessionId);
       await createHotspotMac(ssid, password);
       break;
     default:
@@ -503,6 +498,31 @@ ipcMain.handle("createSession", async (_event, data) => {
   console.log("🚀 ~ ipcMain.handle ~ data:", data);
   return await createHotspot(data);
 });
+ipcMain.handle(
+  "save-excel-file",
+  async (_event, { fileBuffer, fileName, folderPath }) => {
+    try {
+      const baseDir = path$1.join(os.homedir(), "Documents", "Attendance");
+      const fullDir = path$1.join(baseDir, folderPath);
+      fs.mkdirSync(fullDir, { recursive: true });
+      const filePath = path$1.join(fullDir, fileName);
+      const buffer = Buffer.from(fileBuffer);
+      fs.writeFileSync(filePath, buffer);
+      console.log(`✅ File saved successfully: ${filePath}`);
+      shell.showItemInFolder(filePath);
+      return {
+        success: true,
+        path: filePath
+      };
+    } catch (error) {
+      console.error("❌ Error saving file:", error);
+      return {
+        success: false,
+        error: String(error)
+      };
+    }
+  }
+);
 app.whenReady().then(createWindow);
 export {
   MAIN_DIST,
