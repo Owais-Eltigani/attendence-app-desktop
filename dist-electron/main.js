@@ -2,11 +2,12 @@ import { app, clipboard, dialog, shell, BrowserWindow, ipcMain } from "electron"
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path$1 from "node:path";
-import { platform } from "os";
+import os, { platform } from "os";
 import { exec } from "child_process";
 import util, { promisify } from "util";
 import path from "path";
 import fs from "fs";
+import http from "http";
 import { platform as platform$1 } from "node:os";
 const execPromise$1 = util.promisify(exec);
 async function createHotspotMyPublicWifi(ssid, password) {
@@ -126,6 +127,7 @@ function getMyPublicWiFiPath() {
 }
 async function stopMyPublicWiFi() {
   try {
+    console.log("trying to kill myPublic Wifi");
     await execPromise$1("taskkill /F /IM MyPublicWiFi.exe");
     return { success: true };
   } catch (error) {
@@ -181,6 +183,15 @@ async function createHotspotLinux(ssid, password) {
     };
   }
 }
+async function stopHotspotLinux() {
+  try {
+    const wifiInterface = await getWifiInterface();
+    await execPromise(`nmcli device disconnect ${wifiInterface}`);
+    console.log("✅ Linux hotspot stopped");
+  } catch (error) {
+    console.error("Error stopping Linux hotspot:", error);
+  }
+}
 const execAsync = promisify(exec);
 //! WIFI MANAGEMENT FUNCTIONS
 async function createHotspotMac(ssid, password) {
@@ -203,59 +214,7 @@ async function createHotspotMac(ssid, password) {
       "x-apple.systempreferences:com.apple.preferences.sharing"
     );
     const buttons = ["Copy SSID", "Copy Password", "Done"];
-    await new Promise((resolve) => setTimeout(resolve, 1700));
-    let userDone = false;
-    while (!userDone) {
-      const result = await dialog.showMessageBox({
-        type: "info",
-        title: "Hotspot Setup Ready",
-        message: "Ready to Create Hotspot",
-        detail: `
-📶 NETWORK DETAILS (Mobile-Optimized):
-SSID: ${ssid}
-Password: ${password}
-
-IMPORTANT SETUP STEPS:
-1. Select "Internet Sharing" in the window that opened
-2. Choose your internet source (Ad Hoc)
-3. Check "Wi-Fi" in the "To computers using" list
-4. Click "Wi-Fi Options..." button and set:
-   Network Name: ${ssid} (copy with button below)
-   Security: WPA2 Personal (recommended)
-   Password: ${password} (copy with button below)
-   Channel: 11
-5. Enable "Internet Sharing" checkbox
-6. After submitting all attendance, remember to disable Internet Sharing to reconnect to Wi-Fi.
-
-`,
-        buttons
-      });
-      if (result.response === 0) {
-        clipboard.writeText(ssid);
-        await dialog.showMessageBox({
-          type: "info",
-          title: "Copied!",
-          message: "SSID Copied to Clipboard",
-          detail: `SSID: ${ssid}
-
-Paste this in the "Network Name" field.`,
-          buttons: ["OK"]
-        });
-      } else if (result.response === 1) {
-        clipboard.writeText(password);
-        await dialog.showMessageBox({
-          type: "info",
-          title: "Copied!",
-          message: "Password Copied to Clipboard",
-          detail: `Password: ${password}
-
-Paste this in the "Password" field.`,
-          buttons: ["OK"]
-        });
-      } else {
-        userDone = true;
-      }
-    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
     return {
       success: true,
       ssid,
@@ -273,6 +232,155 @@ Paste this in the "Password" field.`,
   }
 }
 //!
+let attendanceServer = null;
+let attendanceData = [];
+function getLocalIPAddress() {
+  const interfaces = os.networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    const iface = interfaces[name];
+    if (!iface) continue;
+    for (const address of iface) {
+      if (address.family === "IPv4" && !address.internal) {
+        console.log("🚀 ~ getLocalIPAddress ~ address:", address);
+        return address.address;
+      }
+    }
+  }
+  return "192.168.137.1";
+}
+async function startAttendanceServer(sessionId, port = 8080) {
+  console.log("Starting attendance server");
+  attendanceData = [];
+  attendanceServer = http.createServer((req, res) => {
+    console.log(`🌐 ${req.method} ${req.url} from ${req.socket.remoteAddress}`);
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    if (req.method === "OPTIONS") {
+      console.log("✓ CORS preflight request");
+      res.writeHead(200);
+      res.end();
+      return;
+    }
+    if (req.method === "GET" && req.url === "/") {
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Attendance Server</title>
+            <style>
+              body { 
+                font-family: Arial; 
+                text-align: center; 
+                padding: 50px;
+                background: #f0f0f0;
+              }
+              .card {
+                background: white;
+                padding: 30px;
+                border-radius: 10px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                max-width: 400px;
+                margin: 0 auto;
+              }
+              h1 { color: #4CAF50; }
+              .status { font-size: 48px; margin: 20px 0; }
+              .info { color: #666; margin: 10px 0; }
+            </style>
+          </head>
+          <body>
+            <div class="card">
+              <h1>Server Online</h1>
+              <p class="info">Attendance server is running</p>
+              <p class="info"><strong>Session ID:</strong> ${sessionId}</p>
+              <p class="info"><strong>Time:</strong> ${(/* @__PURE__ */ new Date()).toLocaleString()}</p>
+              <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+              <p style="font-size: 12px; color: #999;">
+                POST to /submit-attendance to record attendance
+              </p>
+            </div>
+          </body>
+        </html>
+      `);
+      return;
+    }
+    if (req.method === "POST" && req.url === "/submit-attendance") {
+      console.log("\n📥 Incoming attendance submission...");
+      let body = "";
+      req.on("data", (chunk) => {
+        body += chunk.toString();
+        console.log("📦 Receiving data chunk...");
+      });
+      req.on("end", () => {
+        console.log("✅ Data received completely");
+        try {
+          const studentData = JSON.parse(body);
+          console.log("🔍 Parsed student data:", studentData);
+          if (studentData.sessionId !== sessionId) {
+            console.log(
+              `❌ Invalid session ID. Expected: ${sessionId}, Got: ${studentData.sessionId}`
+            );
+            res.writeHead(400);
+            res.end(JSON.stringify({ error: "Invalid session" }));
+            return;
+          }
+          studentData.submittedAt = (/* @__PURE__ */ new Date()).toISOString();
+          attendanceData.push(studentData);
+          console.log("\n" + "=".repeat(60));
+          console.log("✅ ATTENDANCE RECORDED!");
+          console.log("=".repeat(60));
+          console.log(`👤 Name: ${studentData.name}`);
+          console.log(`🎓 Enrollment: ${studentData.enrollmentNo}`);
+          console.log(`📋 Session: ${studentData.sessionId}`);
+          console.log(`⏰ Time: ${studentData.submittedAt}`);
+          console.log(`📊 Total Records: ${attendanceData.length}`);
+          console.log("=".repeat(60) + "\n");
+          res.writeHead(200);
+          res.end(
+            JSON.stringify({ success: true, message: "Attendance recorded" })
+          );
+        } catch (error) {
+          console.error("❌ Error parsing attendance data:", error);
+          console.error("Raw body:", body);
+          res.writeHead(400);
+          res.end(JSON.stringify({ error: "Invalid data" }));
+        }
+      });
+    } else {
+      console.log(`⚠️  Unhandled request: ${req.method} ${req.url}`);
+      res.writeHead(404);
+      res.end();
+    }
+  });
+  //! listen on all interfaces.
+  attendanceServer.listen(port, "0.0.0.0", () => {
+    const ip = getLocalIPAddress();
+    console.log(`
+${"=".repeat(60)}`);
+    console.log(`📡 Attendance Server Started`);
+    console.log(`${"=".repeat(60)}`);
+    console.log(`🌐 Server URL: http://${ip}:${port}`);
+    console.log(`📱 Test in phone browser: http://${ip}:${port}`);
+    console.log(`📋 Session ID: ${sessionId}`);
+    console.log(`${"=".repeat(60)}
+`);
+  });
+  console.log("server 100% running");
+  return {
+    // ip: "192.168.137.1",
+    ip: getLocalIPAddress(),
+    port
+  };
+}
+function stopAttendanceServer() {
+  if (attendanceServer) {
+    attendanceServer.close();
+    attendanceServer = null;
+    console.log("📡 Attendance server stopped");
+  }
+}
 async function createHotspot({
   semester,
   section,
@@ -295,14 +403,26 @@ async function createHotspot({
   switch (platform()) {
     case "win32":
       console.log("calling windows hotspot\n");
-      return await createHotspotMyPublicWifi(ssid, password);
+      startAttendanceServer(
+        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
+      );
+      await createHotspotMyPublicWifi(ssid, password);
+      break;
     case "linux":
-      return await createHotspotLinux(ssid, password);
+      await createHotspotLinux(ssid, password);
+      startAttendanceServer(
+        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
+      );
+      break;
     case "darwin":
-      return await createHotspotMac(ssid, password);
+      await startAttendanceServer(
+        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
+      );
+      await createHotspotMac(ssid, password);
+      break;
     default:
       console.log("Unsupported platform for hotspot creation");
-      return;
+      break;
   }
 }
 const require2 = createRequire(import.meta.url);
@@ -366,9 +486,13 @@ app.on("window-all-closed", async () => {
     if (platform$1() === "win32") {
       await stopMyPublicWiFi();
     }
+    if (platform$1() === "linux") {
+      await stopHotspotLinux();
+    }
     app.quit();
     win = null;
   }
+  stopAttendanceServer();
 });
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {

@@ -9,7 +9,6 @@ let attendanceData: studentData[] = [];
 // Get local IP address
 function getLocalIPAddress() {
   const interfaces = os.networkInterfaces();
-
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {
       //
@@ -82,7 +81,8 @@ export function startAttendanceServer(sessionId: string, port = 8080) {
   });
 
   attendanceServer.listen(port, () => {
-    const ip = getLocalIPAddress();
+    // const ip = getLocalIPAddress();
+    const ip = "192.168.137.1";
     console.log(`Attendance server running at http://${ip}:${port}`);
   });
 
@@ -92,13 +92,13 @@ export function startAttendanceServer(sessionId: string, port = 8080) {
   };
 }
 
-function stopAttendanceServer() {
+export function stopAttendanceServer() {
   if (attendanceServer) {
     attendanceServer.close();
     attendanceServer = null;
   }
 }
 
-function getAttendanceData() {
+export function getAttendanceData() {
   return attendanceData;
 }

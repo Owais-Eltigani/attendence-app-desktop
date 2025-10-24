@@ -4,6 +4,7 @@ import { createHotspotMyPublicWifi } from "./win";
 import { createHotspotLinux } from "./linux";
 import { createHotspotMac } from "./mac";
 import { BrowserWindow } from "electron";
+import { startAttendanceServer } from "./attendanceServer";
 
 export async function createHotspot({
   semester,
@@ -14,8 +15,6 @@ export async function createHotspot({
   console.log(
     `🚀 ~ createHotspot ~ ${{ semester, section, subjectName, classroomNo }} `
   );
-
-  //   check platform and call respective hotspot creation logic
 
   // Generate shorter, mobile-friendly SSID (max 15 chars)
   const timestamp = Date.now().toString().slice(-4); // Last 4 digits only
@@ -35,17 +34,30 @@ export async function createHotspot({
   switch (platform()) {
     case "win32":
       console.log("calling windows hotspot\n");
-      return await createHotspotMyPublicWifi(ssid, password);
+
+      //? in windows start the webserver before launching myPublicWifi.
+      startAttendanceServer(
+        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
+      );
+      await createHotspotMyPublicWifi(ssid, password);
+      break;
 
     case "linux":
-      return await createHotspotLinux(ssid, password);
+      await createHotspotLinux(ssid, password);
+      startAttendanceServer(
+        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
+      );
+      break;
 
     case "darwin":
-      return await createHotspotMac(ssid, password);
+      await startAttendanceServer(
+        `${section.toUpperCase().slice(0, 3)}-${timestamp}`
+      );
+      await createHotspotMac(ssid, password);
+      break;
 
     default:
       console.log("Unsupported platform for hotspot creation");
-      return;
       break;
   }
 }

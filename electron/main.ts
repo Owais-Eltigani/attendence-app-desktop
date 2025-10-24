@@ -5,6 +5,8 @@ import path from "node:path";
 import { createHotspot } from "./hotspotManager";
 import { platform } from "node:os";
 import { stopMyPublicWiFi } from "./win";
+import { stopAttendanceServer } from "./attendanceServer";
+import { stopHotspotLinux } from "./linux";
 
 const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -91,9 +93,15 @@ app.on("window-all-closed", async () => {
     if (platform() === "win32") {
       await stopMyPublicWiFi();
     }
+
+    if (platform() === "linux") {
+      await stopHotspotLinux();
+    }
     app.quit();
     win = null;
   }
+  // gracefully stop attendance server.
+  stopAttendanceServer();
 });
 
 app.on("activate", () => {

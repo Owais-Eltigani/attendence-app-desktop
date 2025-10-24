@@ -39,62 +39,64 @@ export async function createHotspotMac(ssid: string, password: string) {
     // Show simplified instructions
     const buttons = ["Copy SSID", "Copy Password", "Done"];
 
-    await new Promise((resolve) => setTimeout(resolve, 1700));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     // Keep showing dialog until user clicks "Done"
-    let userDone = false;
-    while (!userDone) {
-      const result = await dialog.showMessageBox({
-        type: "info",
-        title: "Hotspot Setup Ready",
-        message: "Ready to Create Hotspot",
-        detail: `
-📶 NETWORK DETAILS (Mobile-Optimized):
-SSID: ${ssid}
-Password: ${password}
 
-IMPORTANT SETUP STEPS:
-1. Select "Internet Sharing" in the window that opened
-2. Choose your internet source (Ad Hoc)
-3. Check "Wi-Fi" in the "To computers using" list
-4. Click "Wi-Fi Options..." button and set:
-   Network Name: ${ssid} (copy with button below)
-   Security: WPA2 Personal (recommended)
-   Password: ${password} (copy with button below)
-   Channel: 11
-5. Enable "Internet Sharing" checkbox
-6. After submitting all attendance, remember to disable Internet Sharing to reconnect to Wi-Fi.
+    //? stops the server from working properly.
+    // let userDone = false;
+    //     while (!userDone) {
+    //       const result = await dialog.showMessageBox({
+    //         type: "info",
+    //         title: "Hotspot Setup Ready",
+    //         message: "Ready to Create Hotspot",
+    //         detail: `
+    // 📶 NETWORK DETAILS (Mobile-Optimized):
+    // SSID: ${ssid}
+    // Password: ${password}
 
-`,
-        buttons,
-      });
+    // IMPORTANT SETUP STEPS:
+    // 1. Select "Internet Sharing" in the window that opened
+    // 2. Choose your internet source (Ad Hoc)
+    // 3. Check "Wi-Fi" in the "To computers using" list
+    // 4. Click "Wi-Fi Options..." button and set:
+    //    Network Name: ${ssid} (copy with button below)
+    //    Security: WPA2 Personal (recommended)
+    //    Password: ${password} (copy with button below)
+    //    Channel: 11
+    // 5. Enable "Internet Sharing" checkbox
+    // 6. After submitting all attendance, remember to disable Internet Sharing to reconnect to Wi-Fi.
 
-      // Handle button clicks
-      if (result.response === 0) {
-        // Copy SSID
-        clipboard.writeText(ssid);
-        await dialog.showMessageBox({
-          type: "info",
-          title: "Copied!",
-          message: "SSID Copied to Clipboard",
-          detail: `SSID: ${ssid}\n\nPaste this in the "Network Name" field.`,
-          buttons: ["OK"],
-        });
-      } else if (result.response === 1) {
-        // Copy Password
-        clipboard.writeText(password);
-        await dialog.showMessageBox({
-          type: "info",
-          title: "Copied!",
-          message: "Password Copied to Clipboard",
-          detail: `Password: ${password}\n\nPaste this in the "Password" field.`,
-          buttons: ["OK"],
-        });
-      } else {
-        // Done button clicked
-        userDone = true;
-      }
-    }
+    // `,
+    //         buttons,
+    //       });
+
+    //       // Handle button clicks
+    //       if (result.response === 0) {
+    //         // Copy SSID
+    //         clipboard.writeText(ssid);
+    //         await dialog.showMessageBox({
+    //           type: "info",
+    //           title: "Copied!",
+    //           message: "SSID Copied to Clipboard",
+    //           detail: `SSID: ${ssid}\n\nPaste this in the "Network Name" field.`,
+    //           buttons: ["OK"],
+    //         });
+    //       } else if (result.response === 1) {
+    //         // Copy Password
+    //         clipboard.writeText(password);
+    //         await dialog.showMessageBox({
+    //           type: "info",
+    //           title: "Copied!",
+    //           message: "Password Copied to Clipboard",
+    //           detail: `Password: ${password}\n\nPaste this in the "Password" field.`,
+    //           buttons: ["OK"],
+    //         });
+    //       } else {
+    //         // Done button clicked
+    //         userDone = true;
+    //       }
+    //     }
 
     return {
       success: true,
