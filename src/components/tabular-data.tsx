@@ -1,118 +1,19 @@
-import { useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { Button } from "./ui/button";
 import * as XLSX from "xlsx";
+import { rowData } from "./attendence-table";
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const Tabular = () => {
-  // Row Data: The data to be displayed.
-  const [rowData, _setRowData] = useState([
-    {
-      No: 3,
-      "Student Name": "Alice Johnson",
-      "Enrollment No": "ENR003",
-      "Submitted at": "2024-10-01 10:10 AM",
-    },
-    {
-      No: 4,
-      "Student Name": "Bob Brown",
-      "Enrollment No": "ENR004",
-      "Submitted at": "2024-10-01 10:15 AM",
-    },
-
-    {
-      No: 5,
-      "Student Name": "Charlie Davis",
-      "Enrollment No": "ENR005",
-      "Submitted at": "2024-10-01 10:20 AM",
-    },
-
-    {
-      No: 1,
-      "Student Name": "John Doe",
-      "Enrollment No": "ENR001",
-      "Submitted at": "2024-10-01 10:00 AM",
-    },
-    {
-      No: 2,
-      "Student Name": "Jane Smith",
-      "Enrollment No": "ENR002",
-      "Submitted at": "2024-10-01 10:05 AM",
-    },
-    {
-      No: 3,
-      "Student Name": "Alice Johnson",
-      "Enrollment No": "ENR003",
-      "Submitted at": "2024-10-01 10:10 AM",
-    },
-    {
-      No: 4,
-      "Student Name": "Bob Brown",
-      "Enrollment No": "ENR004",
-      "Submitted at": "2024-10-01 10:15 AM",
-    },
-
-    {
-      No: 5,
-      "Student Name": "Charlie Davis",
-      "Enrollment No": "ENR005",
-      "Submitted at": "2024-10-01 10:20 AM",
-    },
-    {
-      No: 1,
-      "Student Name": "John Doe",
-      "Enrollment No": "ENR001",
-      "Submitted at": "2024-10-01 10:00 AM",
-    },
-    {
-      No: 2,
-      "Student Name": "Jane Smith",
-      "Enrollment No": "ENR002",
-      "Submitted at": "2024-10-01 10:05 AM",
-    },
-    {
-      No: 3,
-      "Student Name": "Alice Johnson",
-      "Enrollment No": "ENR003",
-      "Submitted at": "2024-10-01 10:10 AM",
-    },
-    {
-      No: 4,
-      "Student Name": "Bob Brown",
-      "Enrollment No": "ENR004",
-      "Submitted at": "2024-10-01 10:15 AM",
-    },
-
-    {
-      No: 5,
-      "Student Name": "Charlie Davis",
-      "Enrollment No": "ENR005",
-      "Submitted at": "2024-10-01 10:20 AM",
-    },
-
-    {
-      No: 1,
-      "Student Name": "John Doe",
-      "Enrollment No": "ENR001",
-      "Submitted at": "2024-10-01 10:00 AM",
-    },
-    {
-      No: 2,
-      "Student Name": "Jane Smith",
-      "Enrollment No": "ENR002",
-      "Submitted at": "2024-10-01 10:05 AM",
-    },
-  ]);
-
   // Column Definitions: Defines the columns to be displayed.
-  const [colDefs, _setColDefs] = useState([
+  const colDefs = [
     { field: "No", centered: true },
     { field: "Student Name", sortable: true, filter: true, editable: true },
     { field: "Enrollment No", sortable: true, filter: true, editable: true },
     { field: "Submitted at" },
-  ]);
+  ];
 
   const handleXLESExport = () => {
     console.log("Exporting to Excel...");
@@ -121,6 +22,15 @@ const Tabular = () => {
     const ws = XLSX.utils.json_to_sheet(rowData);
     XLSX.utils.book_append_sheet(wb, ws, "Attendance");
     XLSX.writeFile(wb, "attendance_data.xlsx");
+  };
+
+  const handleCSVExport = () => {
+    console.log("Exporting to CSV...");
+    //
+    const ws = XLSX.utils.json_to_sheet(rowData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Attendance");
+    XLSX.writeFile(wb, "attendance_data.csv", { bookType: "csv" });
   };
 
   return (
@@ -139,7 +49,7 @@ const Tabular = () => {
       </div>
       <div className="flex flex-row justify-end mt-4 space-x-2  p-2">
         <Button onClick={handleXLESExport}>Export as Excel</Button>
-        <Button>Export as CSV</Button>
+        <Button onClick={handleCSVExport}>Export as CSV</Button>
       </div>
     </div>
   );

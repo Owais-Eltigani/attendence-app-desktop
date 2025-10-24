@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Users, Search, UserCheck, UserX, Clock } from 'lucide-react';
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Users, Search, UserCheck, UserX, Clock } from "lucide-react";
 
 interface AttendanceTableProps {
   sessionData: {
@@ -15,34 +15,131 @@ interface AttendanceTableProps {
     semester: string;
   };
 }
+export const rowData = [
+  {
+    No: 3,
+    "Student Name": "Alice Johnson",
+    "Enrollment No": "ENR003",
+    "Submitted at": "2024-10-01 10:10 AM",
+  },
+  {
+    No: 4,
+    "Student Name": "Bob Brown",
+    "Enrollment No": "ENR004",
+    "Submitted at": "2024-10-01 10:15 AM",
+  },
+
+  {
+    No: 5,
+    "Student Name": "Charlie Davis",
+    "Enrollment No": "ENR005",
+    "Submitted at": "2024-10-01 10:20 AM",
+  },
+
+  {
+    No: 1,
+    "Student Name": "John Doe",
+    "Enrollment No": "ENR001",
+    "Submitted at": "2024-10-01 10:00 AM",
+  },
+  {
+    No: 2,
+    "Student Name": "Jane Smith",
+    "Enrollment No": "ENR002",
+    "Submitted at": "2024-10-01 10:05 AM",
+  },
+  {
+    No: 3,
+    "Student Name": "Alice Johnson",
+    "Enrollment No": "ENR003",
+    "Submitted at": "2024-10-01 10:10 AM",
+  },
+  {
+    No: 4,
+    "Student Name": "Bob Brown",
+    "Enrollment No": "ENR004",
+    "Submitted at": "2024-10-01 10:15 AM",
+  },
+
+  {
+    No: 5,
+    "Student Name": "Charlie Davis",
+    "Enrollment No": "ENR005",
+    "Submitted at": "2024-10-01 10:20 AM",
+  },
+  {
+    No: 1,
+    "Student Name": "John Doe",
+    "Enrollment No": "ENR001",
+    "Submitted at": "2024-10-01 10:00 AM",
+  },
+  {
+    No: 2,
+    "Student Name": "Jane Smith",
+    "Enrollment No": "ENR002",
+    "Submitted at": "2024-10-01 10:05 AM",
+  },
+  {
+    No: 3,
+    "Student Name": "Alice Johnson",
+    "Enrollment No": "ENR003",
+    "Submitted at": "2024-10-01 10:10 AM",
+  },
+  {
+    No: 4,
+    "Student Name": "Bob Brown",
+    "Enrollment No": "ENR004",
+    "Submitted at": "2024-10-01 10:15 AM",
+  },
+
+  {
+    No: 5,
+    "Student Name": "Charlie Davis",
+    "Enrollment No": "ENR005",
+    "Submitted at": "2024-10-01 10:20 AM",
+  },
+
+  {
+    No: 1,
+    "Student Name": "John Doe",
+    "Enrollment No": "ENR001",
+    "Submitted at": "2024-10-01 10:00 AM",
+  },
+  {
+    No: 2,
+    "Student Name": "Jane Smith",
+    "Enrollment No": "ENR002",
+    "Submitted at": "2024-10-01 10:05 AM",
+  },
+];
 
 // Mock student data
 const mockStudents = [
-  { id: 'ST001', name: 'Alice Johnson', rollNo: '2021001', status: 'present' },
-  { id: 'ST002', name: 'Bob Smith', rollNo: '2021002', status: 'absent' },
-  { id: 'ST003', name: 'Carol Davis', rollNo: '2021003', status: 'present' },
-  { id: 'ST004', name: 'David Wilson', rollNo: '2021004', status: 'late' },
-  { id: 'ST005', name: 'Emma Brown', rollNo: '2021005', status: 'present' },
-  { id: 'ST006', name: 'Frank Miller', rollNo: '2021006', status: 'absent' },
-  { id: 'ST007', name: 'Grace Lee', rollNo: '2021007', status: 'present' },
-  { id: 'ST008', name: 'Henry Taylor', rollNo: '2021008', status: 'present' },
+  { id: "ST001", name: "Alice Johnson", rollNo: "2021001", status: "present" },
+  { id: "ST002", name: "Bob Smith", rollNo: "2021002", status: "absent" },
+  { id: "ST003", name: "Carol Davis", rollNo: "2021003", status: "present" },
+  { id: "ST004", name: "David Wilson", rollNo: "2021004", status: "late" },
+  { id: "ST005", name: "Emma Brown", rollNo: "2021005", status: "present" },
+  { id: "ST006", name: "Frank Miller", rollNo: "2021006", status: "absent" },
+  { id: "ST007", name: "Grace Lee", rollNo: "2021007", status: "present" },
+  { id: "ST008", name: "Henry Taylor", rollNo: "2021008", status: "present" },
 ];
 
 export function AttendanceTable({ sessionData }: AttendanceTableProps) {
   const [students, setStudents] = useState(mockStudents);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredStudents = students.filter(
-    student =>
+    (student) =>
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.rollNo.includes(searchTerm)
   );
 
   const toggleAttendance = (studentId: string) => {
-    setStudents(prev =>
-      prev.map(student => {
+    setStudents((prev) =>
+      prev.map((student) => {
         if (student.id === studentId) {
-          const statuses = ['present', 'absent', 'late'];
+          const statuses = ["present", "absent", "late"];
           const currentIndex = statuses.indexOf(student.status);
           const nextStatus = statuses[(currentIndex + 1) % statuses.length];
           return { ...student, status: nextStatus };
@@ -54,21 +151,21 @@ export function AttendanceTable({ sessionData }: AttendanceTableProps) {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'present':
+      case "present":
         return (
           <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
             <UserCheck className="h-3 w-3 mr-1" />
             Present
           </Badge>
         );
-      case 'absent':
+      case "absent":
         return (
           <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
             <UserX className="h-3 w-3 mr-1" />
             Absent
           </Badge>
         );
-      case 'late':
+      case "late":
         return (
           <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
             <Clock className="h-3 w-3 mr-1" />
@@ -80,9 +177,9 @@ export function AttendanceTable({ sessionData }: AttendanceTableProps) {
     }
   };
 
-  const presentCount = students.filter(s => s.status === 'present').length;
-  const absentCount = students.filter(s => s.status === 'absent').length;
-  const lateCount = students.filter(s => s.status === 'late').length;
+  const presentCount = students.filter((s) => s.status === "present").length;
+  const absentCount = students.filter((s) => s.status === "absent").length;
+  const lateCount = students.filter((s) => s.status === "late").length;
 
   return (
     <Card>
@@ -112,7 +209,7 @@ export function AttendanceTable({ sessionData }: AttendanceTableProps) {
             <Input
               placeholder="Search by name or roll number..."
               value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -135,8 +232,9 @@ export function AttendanceTable({ sessionData }: AttendanceTableProps) {
                   <tr
                     key={student.id}
                     className={
-                      index % 2 === 0 ? 'bg-background' : 'bg-muted/30'
-                    }>
+                      index % 2 === 0 ? "bg-background" : "bg-muted/30"
+                    }
+                  >
                     <td className="p-4 font-mono text-sm">{student.rollNo}</td>
                     <td className="p-4 font-medium">{student.name}</td>
                     <td className="p-4 text-center">
@@ -146,7 +244,8 @@ export function AttendanceTable({ sessionData }: AttendanceTableProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => toggleAttendance(student.id)}>
+                        onClick={() => toggleAttendance(student.id)}
+                      >
                         Mark
                       </Button>
                     </td>
