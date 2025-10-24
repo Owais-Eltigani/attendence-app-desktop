@@ -2,18 +2,48 @@ import { AgGridReact } from "ag-grid-react";
 import { AllCommunityModule, ModuleRegistry } from "ag-grid-community";
 import { Button } from "./ui/button";
 import * as XLSX from "xlsx";
-import { rowData } from "./attendence-table";
 import { useSession } from "@/contexts/SessionContext";
+import { useEffect, useState } from "react";
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+interface StudentData {
+  name: string;
+  enrollmentNo: string;
+  sessionId: string;
+  No?: number;
+  submittedAt?: string;
+  Notes?: string;
+}
+
 const Tabular = () => {
   // Access session data from context
   const { subjectName, section, semester } = useSession();
+  const [studentsData, setStudentsData] = useState<StudentData[]>([]);
+
+  useEffect(() => {
+    // Listen for real-time attendance updates
+    let len = studentsData.length;
+    const unsubscribe = window.electronAPI?.onAttendanceUpdate(
+      (studentData: StudentData) => {
+        // Add new student to the list
+        setStudentsData((prev) => [
+          ...prev,
+          { ...studentData, No: ++len, Notes: "" },
+        ]);
+        console.log("� Received attendance update:", studentData);
+      }
+    );
+
+    // Cleanup on unmount
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
 
   //? create a path depending on session data (relative path for folder structure)
-  const folderPath = `Section ${section}/${semester}th Semester/${subjectName.toUpperCase()}`;
+  const folderPath = `Sec ${section}/${semester}th Sem/${subjectName.toUpperCase()}`;
 
   //? save the file as dd-mm-yyyy.xlsx
   const date = new Date();
@@ -27,26 +57,25 @@ const Tabular = () => {
     try {
       // Create workbook
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(rowData);
+      const ws = XLSX.utils.json_to_sheet(studentsData);
       XLSX.utils.book_append_sheet(wb, ws, "Attendance");
 
       // Write to array buffer instead of file
       const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" });
 
       // Use Electron API to save with proper directory creation
-      //@ts-expect-error - electronAPI is available in Electron
-      const result = await window.electronAPI.saveExcelFile(
+      const result = await window.electronAPI?.saveExcelFile(
         wbout,
         `${today}.xlsx`,
         folderPath
       );
 
-      if (result.success) {
+      if (result?.success) {
         console.log(`✅ File saved successfully at: ${result.path}`);
         // File explorer will open automatically via shell.showItemInFolder()
       } else {
-        console.error("❌ Failed to save file:", result.error);
-        alert(`Failed to save file: ${result.error}`);
+        console.error("❌ Failed to save file:", result?.error);
+        alert(`Failed to save file: ${result?.error}`);
       }
     } catch (error) {
       console.error("Error exporting Excel:", error);
@@ -59,7 +88,7 @@ const Tabular = () => {
 
     try {
       // Create workbook
-      const ws = XLSX.utils.json_to_sheet(rowData);
+      const ws = XLSX.utils.json_to_sheet(studentsData);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Attendance");
 
@@ -67,19 +96,18 @@ const Tabular = () => {
       const wbout = XLSX.write(wb, { bookType: "csv", type: "array" });
 
       // Use Electron API to save with proper directory creation
-      //@ts-expect-error - electronAPI is available in Electron
-      const result = await window.electronAPI.saveExcelFile(
+      const result = await window.electronAPI?.saveExcelFile(
         wbout,
         `${today}.csv`,
         folderPath
       );
 
-      if (result.success) {
+      if (result?.success) {
         console.log(`✅ CSV saved successfully at: ${result.path}`);
         // File explorer will open automatically via shell.showItemInFolder()
       } else {
-        console.error("❌ Failed to save CSV:", result.error);
-        alert(`Failed to save file: ${result.error}`);
+        console.error("❌ Failed to save CSV:", result?.error);
+        alert(`Failed to save file: ${result?.error}`);
       }
     } catch (error) {
       console.error("Error exporting CSV:", error);
@@ -89,9 +117,13 @@ const Tabular = () => {
 
   const colDefs = [
     { field: "No", centered: true },
-    { field: "Student Name", sortable: true, filter: true, editable: true },
-    { field: "Enrollment No", sortable: true, filter: true, editable: true },
-    { field: "Submitted at" },
+    { field: "studentName", sortable: true, filter: true, editable: true },
+    { field: "enrollmentNo", sortable: true, filter: true, editable: true },
+    { field: "submittedAt", sortable: true, filter: true },
+    {
+      field: "Note",
+      editable: true,
+    },
   ];
   return (
     <div className="">
@@ -102,7 +134,11 @@ const Tabular = () => {
             style={{ height: "300px", width: "100%", scrollbarWidth: "thin" }}
             className="ag-theme-alpine"
           >
-            <AgGridReact rowData={rowData} columnDefs={colDefs} />
+            <AgGridReact
+              rowData={studentsData}
+              columnDefs={colDefs}
+              rowNumbers={true}
+            />
           </div>
         </h1>
         {/*          */}

@@ -1,3 +1,4 @@
+import { BrowserWindow } from "electron";
 import http from "http";
 import os from "os";
 
@@ -10,6 +11,12 @@ interface StudentData {
 
 let attendanceServer: http.Server | null = null;
 let attendanceData: StudentData[] = [];
+let mainWindow: BrowserWindow | null = null;
+
+// Set the main window reference (call this from main.ts after window creation)
+export function setMainWindow(window: BrowserWindow) {
+  mainWindow = window;
+}
 
 // Get local IP address
 export function getLocalIPAddress() {
@@ -127,12 +134,19 @@ export async function startAttendanceServer(sessionId: string, port = 8080) {
 
           // Store attendance
           attendanceData.push(studentData);
+          console.log("🚀 ~ startAttendanceServer ~ studentData:", studentData);
+
+          //? send the data to renderer process "tabular-data"
+          if (mainWindow && mainWindow.webContents) {
+            console.log("📤 Sending attendance update to renderer");
+            mainWindow.webContents.send("attendance-update", studentData);
+          }
 
           console.log("\n" + "=".repeat(60));
           console.log("✅ ATTENDANCE RECORDED!");
           console.log("=".repeat(60));
           console.log(`👤 Name: ${studentData.name}`);
-          console.log(`🎓 Enrollment: ${studentData.enrollmentNo}`);
+          console.log(`🎓 Enrollment: ${studentData.enroNo}`);
           console.log(`📋 Session: ${studentData.sessionId}`);
           console.log(`⏰ Time: ${studentData.submittedAt}`);
           console.log(`📊 Total Records: ${attendanceData.length}`);

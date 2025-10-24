@@ -19,6 +19,14 @@ declare global {
       path?: string;
       error?: string;
     }>;
+    onAttendanceUpdate: (
+      cb: (studentData: {
+        name: string;
+        enrollmentNo: string;
+        sessionId: string;
+        submittedAt?: string;
+      }) => void
+    ) => () => void;
   }
 
   interface Window {

@@ -37,5 +37,12 @@ electron.contextBridge.exposeInMainWorld("electronAPI", {
     return () => electron.ipcRenderer.off(channel, listener);
   },
   // Save Excel file with directory creation
-  saveExcelFile: (fileBuffer, fileName, folderPath) => electron.ipcRenderer.invoke("save-excel-file", { fileBuffer, fileName, folderPath })
+  saveExcelFile: (fileBuffer, fileName, folderPath) => electron.ipcRenderer.invoke("save-excel-file", { fileBuffer, fileName, folderPath }),
+  // Listen for attendance updates from main process
+  onAttendanceUpdate: (callback) => {
+    const channel = "attendance-update";
+    const listener = (_event, data) => callback(data);
+    electron.ipcRenderer.on(channel, listener);
+    return () => electron.ipcRenderer.off(channel, listener);
+  }
 });

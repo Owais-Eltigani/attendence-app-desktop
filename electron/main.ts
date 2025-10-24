@@ -1,11 +1,11 @@
-import { app, BrowserWindow, ipcMain, shell, dialog } from "electron";
+import { app, BrowserWindow, ipcMain, shell } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { createHotspot } from "./hotspotManager";
 import { platform } from "node:os";
 import { stopMyPublicWiFi } from "./win";
-import { stopAttendanceServer } from "./attendanceServer";
+import { stopAttendanceServer, setMainWindow } from "./attendanceServer";
 import fs from "fs";
 import os from "os";
 import { stopHotspotLinux } from "./linux";
@@ -73,6 +73,9 @@ function createWindow() {
       // More info:
     },
   });
+
+  // Set the window reference for attendance server
+  setMainWindow(win);
 
   // Test active push message to Renderer-process.
   win.webContents.on("did-finish-load", () => {

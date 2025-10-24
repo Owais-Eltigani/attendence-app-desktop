@@ -234,6 +234,10 @@ async function createHotspotMac(ssid, password) {
 //!
 let attendanceServer = null;
 let attendanceData = [];
+let mainWindow = null;
+function setMainWindow(window) {
+  mainWindow = window;
+}
 function getLocalIPAddress() {
   const interfaces = os.networkInterfaces();
   for (const name of Object.keys(interfaces)) {
@@ -328,11 +332,16 @@ async function startAttendanceServer(sessionId, port = 8080) {
           }
           studentData.submittedAt = (/* @__PURE__ */ new Date()).toISOString();
           attendanceData.push(studentData);
+          console.log("🚀 ~ startAttendanceServer ~ studentData:", studentData);
+          if (mainWindow && mainWindow.webContents) {
+            console.log("📤 Sending attendance update to renderer");
+            mainWindow.webContents.send("attendance-update", studentData);
+          }
           console.log("\n" + "=".repeat(60));
           console.log("✅ ATTENDANCE RECORDED!");
           console.log("=".repeat(60));
           console.log(`👤 Name: ${studentData.name}`);
-          console.log(`🎓 Enrollment: ${studentData.enrollmentNo}`);
+          console.log(`🎓 Enrollment: ${studentData.enroNo}`);
           console.log(`📋 Session: ${studentData.sessionId}`);
           console.log(`⏰ Time: ${studentData.submittedAt}`);
           console.log(`📊 Total Records: ${attendanceData.length}`);
@@ -467,6 +476,7 @@ function createWindow() {
       // More info:
     }
   });
+  setMainWindow(win);
   win.webContents.on("did-finish-load", () => {
     win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
   });

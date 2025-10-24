@@ -56,4 +56,30 @@ contextBridge.exposeInMainWorld("electronAPI", {
     folderPath: string
   ) =>
     ipcRenderer.invoke("save-excel-file", { fileBuffer, fileName, folderPath }),
+
+  // Listen for attendance updates from main process
+  onAttendanceUpdate: (
+    callback: (studentData: {
+      name: string;
+      enrollmentNo: string;
+      sessionId: string;
+      submittedAt?: string;
+    }) => void
+  ) => {
+    const channel = "attendance-update";
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      data: {
+        name: string;
+        enrollmentNo: string;
+        sessionId: string;
+        submittedAt?: string;
+      }
+    ) => callback(data);
+
+    ipcRenderer.on(channel, listener);
+
+    // Return an unsubscribe function
+    return () => ipcRenderer.off(channel, listener);
+  },
 });
