@@ -136,6 +136,7 @@ const Tabular = () => {
           >
             <AgGridReact
               rowData={studentsData}
+              //@ts-expect-error suppressing ts error for dynamic access
               columnDefs={colDefs}
               rowNumbers={true}
             />
