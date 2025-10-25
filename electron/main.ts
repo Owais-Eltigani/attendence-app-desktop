@@ -6,6 +6,7 @@ import { createHotspot } from "./hotspotManager";
 import { platform } from "node:os";
 import { stopMyPublicWiFi } from "./win";
 import { stopAttendanceServer, setMainWindow } from "./attendanceServer";
+import { stopBluetoothBeacon } from "./mac-linux-bluetooth-beacon";
 import fs from "fs";
 import os from "os";
 import { stopHotspotLinux } from "./linux";
@@ -105,8 +106,9 @@ app.on("window-all-closed", async () => {
     app.quit();
     win = null;
   }
-  // gracefully stop attendance server.
+  // gracefully stop attendance server and BLE beacon
   stopAttendanceServer();
+  await stopBluetoothBeacon();
 });
 
 app.on("activate", () => {

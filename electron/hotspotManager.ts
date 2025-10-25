@@ -5,6 +5,7 @@ import { createHotspotLinux } from "./linux";
 import { createHotspotMac } from "./mac";
 import { BrowserWindow } from "electron";
 import { startAttendanceServer } from "./attendanceServer";
+import { createBluetoothBeacon } from "./mac-linux-bluetooth-beacon";
 
 export async function createHotspot({
   semester,
@@ -34,6 +35,21 @@ export async function createHotspot({
   const sessionId = `${section.toUpperCase().slice(0, 3)}-${timestamp}`;
   console.log({ ssid, password });
 
+  // Start BLE advertising for all platforms (runs in parallel)
+  console.log("📡 Starting BLE beacon...");
+  createBluetoothBeacon(ssid, password)
+    .then((result) => {
+      if (result.success) {
+        console.log("✅ BLE beacon broadcasting WiFi credentials");
+      } else {
+        console.warn("⚠️ BLE beacon failed:", result.error);
+        console.log("📶 WiFi hotspot still available for manual connection");
+      }
+    })
+    .catch((error) => {
+      console.error("❌ BLE beacon error:", error);
+    });
+
   switch (platform()) {
     case "win32":
       console.log("calling windows hotspot\n");
@@ -49,6 +65,7 @@ export async function createHotspot({
       break;
 
     case "darwin":
+      await createBluetoothBeacon(ssid, password);
       await startAttendanceServer(sessionId);
       await createHotspotMac(ssid, password);
       break;

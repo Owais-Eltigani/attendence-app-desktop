@@ -1,4 +1,4 @@
-import { app, clipboard, dialog, shell, BrowserWindow, ipcMain } from "electron";
+import { app, clipboard, dialog, BrowserWindow, ipcMain, shell } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path$1 from "node:path";
@@ -192,46 +192,6 @@ async function stopHotspotLinux() {
     console.error("Error stopping Linux hotspot:", error);
   }
 }
-const execAsync = promisify(exec);
-//! WIFI MANAGEMENT FUNCTIONS
-async function createHotspotMac(ssid, password) {
-  try {
-    const checkAdHoc = await execAsync(
-      " networksetup -listallnetworkservices | grep AdHoc"
-    );
-    if (!checkAdHoc.stdout.includes("AdHoc")) {
-      const createAdHoc = [
-        "sudo networksetup -createnetworkservice AdHoc lo0",
-        "sudo networksetup -setmanual AdHoc 192.168.1.88 255.255.255.255"
-      ];
-      for (const cmd of createAdHoc) {
-        await execAsync(cmd);
-        new Promise((resolve) => setTimeout(resolve, 500));
-      }
-    }
-    clipboard.writeText(ssid);
-    await shell.openExternal(
-      "x-apple.systempreferences:com.apple.preferences.sharing"
-    );
-    const buttons = ["Copy SSID", "Copy Password", "Done"];
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return {
-      success: true,
-      ssid,
-      password,
-      message: "Hotspot setup instructions displayed"
-    };
-  } catch (error) {
-    console.error("macOS auto-disconnect hotspot setup error:", error);
-    return {
-      success: false,
-      ssid: "",
-      password: "",
-      message: error instanceof Error ? error.message : "Unknown error"
-    };
-  }
-}
-//!
 let attendanceServer = null;
 let attendanceData = [];
 let mainWindow = null;
@@ -390,6 +350,180 @@ function stopAttendanceServer() {
     console.log("📡 Attendance server stopped");
   }
 }
+let bleno = null;
+let isAdvertising = false;
+async function getBleno() {
+  if (!bleno) {
+    try {
+      bleno = await import("@abandonware/bleno");
+    } catch (error) {
+      throw new Error(`Bleno not installed. Run: pnpm add @abandonware/bleno`);
+    }
+  }
+  return bleno;
+}
+const createBluetoothBeacon = async (ssid, password) => {
+  const os2 = platform();
+  try {
+    const blenoModule = await getBleno();
+    const bleno2 = blenoModule.default || blenoModule;
+    const Characteristic = bleno2.Characteristic;
+    const Descriptor = bleno2.Descriptor;
+    const PrimaryService = bleno2.PrimaryService;
+    const SERVICE_UUID = "123e4567-e89b-12d3-a456-426614174000";
+    const SSID_CHARACTERISTIC_UUID = "123e4567-e89b-12d3-a456-426614174001";
+    const PASSWORD_CHARACTERISTIC_UUID = "123e4567-e89b-12d3-a456-426614174002";
+    console.log(`📡 Broadcasting WiFi credentials via BLE:`);
+    console.log(`   SSID: "${ssid}"`);
+    console.log(`   Password: "${password}"`);
+    const SSIDCharacteristic = new Characteristic({
+      uuid: SSID_CHARACTERISTIC_UUID,
+      properties: ["read"],
+      descriptors: [
+        new Descriptor({
+          uuid: "2901",
+          value: Buffer.from("WiFi SSID")
+        })
+      ],
+      onReadRequest: (offset, callback) => {
+        const data = Buffer.from(ssid, "utf-8");
+        console.log(`📱 Device reading SSID characteristic`);
+        console.log(`   String: "${ssid}"`);
+        console.log(`   Hex: 0x${data.toString("hex").toUpperCase()}`);
+        console.log(`   Bytes: [${Array.from(data).join(", ")}]`);
+        callback(bleno2.Characteristic.RESULT_SUCCESS, data.slice(offset));
+      }
+    });
+    const PasswordCharacteristic = new Characteristic({
+      uuid: PASSWORD_CHARACTERISTIC_UUID,
+      properties: ["read"],
+      descriptors: [
+        new Descriptor({
+          uuid: "2901",
+          value: Buffer.from("WiFi Password")
+        })
+      ],
+      onReadRequest: (offset, callback) => {
+        const data = Buffer.from(password, "utf-8");
+        console.log(`📱 Device reading Password characteristic`);
+        console.log(`   String: "${password}"`);
+        console.log(`   Hex: 0x${data.toString("hex").toUpperCase()}`);
+        console.log(`   Bytes: [${Array.from(data).join(", ")}]`);
+        callback(bleno2.Characteristic.RESULT_SUCCESS, data.slice(offset));
+      }
+    });
+    const WiFiCredentialsService = new PrimaryService({
+      uuid: SERVICE_UUID,
+      characteristics: [SSIDCharacteristic, PasswordCharacteristic]
+    });
+    return new Promise((resolve, reject) => {
+      bleno2.on("stateChange", (state) => {
+        console.log(`📡 Bluetooth state: ${state}`);
+        if (state === "poweredOn") {
+          bleno2.startAdvertising(
+            "AttendanceApp",
+            [SERVICE_UUID],
+            (error) => {
+              if (error) {
+                console.error("❌ BLE advertising error:", error);
+                reject({
+                  success: false,
+                  error: `Failed to start advertising: ${error.message}`,
+                  ssid,
+                  password
+                });
+              } else {
+                console.log("✅ BLE advertising started");
+              }
+            }
+          );
+        } else if (state === "unsupported") {
+          reject({
+            success: false,
+            error: "BLE not supported on this device",
+            ssid,
+            password
+          });
+        } else {
+          console.warn(`⚠️ BLE state: ${state}`);
+        }
+      });
+      bleno2.on("advertisingStart", (error) => {
+        if (error) {
+          console.error("❌ Advertising start error:", error);
+          reject({
+            success: false,
+            error: `Advertising failed: ${error.message}`,
+            ssid,
+            password
+          });
+        } else {
+          console.log("🎯 Advertising started, setting up services...");
+          bleno2.setServices([WiFiCredentialsService], (error2) => {
+            if (error2) {
+              console.error("❌ Service setup error:", error2);
+              reject({
+                success: false,
+                error: `Service setup failed: ${error2.message}`,
+                ssid,
+                password
+              });
+            } else {
+              isAdvertising = true;
+              console.log("✅ BLE beacon active!");
+              console.log(`📡 Broadcasting: SSID="${ssid}"`);
+              console.log(`🔐 Service UUID: ${SERVICE_UUID}`);
+              resolve({
+                success: true,
+                ssid,
+                password
+              });
+            }
+          });
+        }
+      });
+      bleno2.on("accept", (clientAddress) => {
+        console.log(`📱 Device connected: ${clientAddress}`);
+      });
+      bleno2.on("disconnect", (clientAddress) => {
+        console.log(`📴 Device disconnected: ${clientAddress}`);
+      });
+      setTimeout(() => {
+        if (!isAdvertising) {
+          reject({
+            success: false,
+            error: "BLE advertising timeout - check Bluetooth is enabled",
+            ssid,
+            password
+          });
+        }
+      }, 1e4);
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("❌ BLE setup failed:", errorMessage);
+    return {
+      success: false,
+      error: `BLE failed on ${os2}: ${errorMessage}`,
+      ssid,
+      password
+    };
+  }
+};
+const stopBluetoothBeacon = async () => {
+  try {
+    if (bleno && isAdvertising) {
+      const blenoModule = await getBleno();
+      const blenoInstance = blenoModule.default || blenoModule;
+      blenoInstance.stopAdvertising();
+      blenoInstance.disconnect();
+      isAdvertising = false;
+      console.log("🛑 BLE advertising stopped");
+    }
+  } catch (error) {
+    console.error("Error stopping BLE:", error);
+  }
+};
 async function createHotspot({
   semester,
   section,
@@ -410,6 +544,17 @@ async function createHotspot({
   }
   const sessionId = `${section.toUpperCase().slice(0, 3)}-${timestamp}`;
   console.log({ ssid, password });
+  console.log("📡 Starting BLE beacon...");
+  createBluetoothBeacon(ssid, password).then((result) => {
+    if (result.success) {
+      console.log("✅ BLE beacon broadcasting WiFi credentials");
+    } else {
+      console.warn("⚠️ BLE beacon failed:", result.error);
+      console.log("📶 WiFi hotspot still available for manual connection");
+    }
+  }).catch((error) => {
+    console.error("❌ BLE beacon error:", error);
+  });
   switch (platform()) {
     case "win32":
       console.log("calling windows hotspot\n");
@@ -421,8 +566,7 @@ async function createHotspot({
       startAttendanceServer(sessionId);
       break;
     case "darwin":
-      await startAttendanceServer(sessionId);
-      await createHotspotMac(ssid, password);
+      await createBluetoothBeacon(ssid, password);
       break;
     default:
       console.log("Unsupported platform for hotspot creation");
@@ -498,6 +642,7 @@ app.on("window-all-closed", async () => {
     win = null;
   }
   stopAttendanceServer();
+  await stopBluetoothBeacon();
 });
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
