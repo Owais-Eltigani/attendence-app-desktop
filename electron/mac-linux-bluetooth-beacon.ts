@@ -30,6 +30,16 @@ export const createBluetoothBeacon = async (
 ): Promise<BleResult> => {
   const os = platform();
 
+  // Bleno does NOT work on Windows - it will crash!
+  if (os === "win32") {
+    return {
+      success: false,
+      error: "Bleno is not compatible with Windows. Use noble-winrt instead.",
+      ssid,
+      password,
+    };
+  }
+
   try {
     const blenoModule = await getBleno();
     // Handle both default and named exports

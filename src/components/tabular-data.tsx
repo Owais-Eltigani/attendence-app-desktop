@@ -149,8 +149,12 @@ const Tabular = () => {
           *The file will be saved at Documents/{folderPath}
         </div>
         <div className="space-x-2">
-          <Button onClick={handleXLESExport}>Export as Excel</Button>
-          <Button onClick={handleCSVExport}>Export as CSV</Button>
+          <Button onClick={handleXLESExport} disabled={!studentsData.length}>
+            Export as Excel
+          </Button>
+          <Button onClick={handleCSVExport} disabled={!studentsData.length}>
+            Export as CSV
+          </Button>
         </div>
       </div>
     </div>

@@ -19,6 +19,7 @@ export default defineConfig({
                 "@abandonware/bleno",
                 "@abandonware/bluetooth-hci-socket",
                 "node-ble",
+                "noble-winrt",
               ],
             },
           },

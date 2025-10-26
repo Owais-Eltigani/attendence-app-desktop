@@ -364,6 +364,14 @@ async function getBleno() {
 }
 const createBluetoothBeacon = async (ssid, password) => {
   const os2 = platform();
+  if (os2 === "win32") {
+    return {
+      success: false,
+      error: "Bleno is not compatible with Windows. Use noble-winrt instead.",
+      ssid,
+      password
+    };
+  }
   try {
     const blenoModule = await getBleno();
     const bleno2 = blenoModule.default || blenoModule;
