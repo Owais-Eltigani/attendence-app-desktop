@@ -67,7 +67,7 @@ export async function createHotspot({
     case "darwin":
       await createBluetoothBeacon(ssid, password);
       await startAttendanceServer(sessionId);
-      // await createHotspotMac(ssid, password);
+      await createHotspotMac(ssid, password);
       break;
 
     default:

@@ -1,4 +1,4 @@
-import { app, clipboard, dialog, BrowserWindow, ipcMain, shell } from "electron";
+import { app, clipboard, dialog, shell, BrowserWindow, ipcMain } from "electron";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import path$1 from "node:path";
@@ -192,6 +192,45 @@ async function stopHotspotLinux() {
     console.error("Error stopping Linux hotspot:", error);
   }
 }
+const execAsync = promisify(exec);
+//! WIFI MANAGEMENT FUNCTIONS
+async function createHotspotMac(ssid, password) {
+  try {
+    const checkAdHoc = await execAsync(
+      " networksetup -listallnetworkservices | grep AdHoc"
+    );
+    if (!checkAdHoc.stdout.includes("AdHoc")) {
+      const createAdHoc = [
+        "sudo networksetup -createnetworkservice AdHoc lo0",
+        "sudo networksetup -setmanual AdHoc 192.168.1.88 255.255.255.255"
+      ];
+      for (const cmd of createAdHoc) {
+        await execAsync(cmd);
+        new Promise((resolve) => setTimeout(resolve, 500));
+      }
+    }
+    clipboard.writeText(ssid);
+    await shell.openExternal(
+      "x-apple.systempreferences:com.apple.preferences.sharing"
+    );
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    return {
+      success: true,
+      ssid,
+      password,
+      message: "Hotspot setup instructions displayed"
+    };
+  } catch (error) {
+    console.error("macOS auto-disconnect hotspot setup error:", error);
+    return {
+      success: false,
+      ssid: "",
+      password: "",
+      message: error instanceof Error ? error.message : "Unknown error"
+    };
+  }
+}
+//!
 let attendanceServer = null;
 let attendanceData = [];
 let mainWindow = null;
@@ -576,6 +615,7 @@ async function createHotspot({
     case "darwin":
       await createBluetoothBeacon(ssid, password);
       await startAttendanceServer(sessionId);
+      await createHotspotMac(ssid, password);
       break;
     default:
       console.log("Unsupported platform for hotspot creation");
