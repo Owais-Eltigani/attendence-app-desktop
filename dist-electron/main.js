@@ -330,6 +330,11 @@ async function startAttendanceServer(sessionId, port = 8080) {
             return;
           }
           studentData.submittedAt = (/* @__PURE__ */ new Date()).toISOString();
+          const student = {
+            studentName: studentData.name,
+            enrollmentNo: studentData.enrollmentNo,
+            submittedAt: studentData.submittedAt
+          };
           attendanceData.push(studentData);
           console.log("🚀 ~ startAttendanceServer ~ studentData:", studentData);
           if (mainWindow && mainWindow.webContents) {
@@ -580,17 +585,19 @@ async function createHotspot({
   console.log(
     `🚀 ~ createHotspot ~ ${{ semester, section, subjectName, classroomNo }} `
   );
-  const timestamp = Date.now().toString().slice(-4);
-  const ssid = `ATT-${section.toUpperCase().slice(0, 3)}-${timestamp}`;
-  const password = `CLASS${classroomNo.toUpperCase().slice(0, 6)}${timestamp}`;
+  let timestamp = Date.now().toString().slice(-4);
+  const password = `${classroomNo.toUpperCase()[0]}CL${classroomNo.toUpperCase().slice(1, 6)}A${timestamp}SS`;
+  const sessionId = `${classroomNo.toUpperCase().slice(1, 6)}${section.toUpperCase().slice(0, 3)}${classroomNo.toUpperCase()[0]}`;
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  timestamp = Date.now().toString().slice(-8);
+  const ssid = `${timestamp}SSID${section.toUpperCase().slice(0, 3)}`;
   const focused = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
   if (focused) {
     focused.webContents.send("hotspot-credentials", { ssid, password });
   } else {
     console.warn("No renderer window available to send hotspot credentials");
   }
-  const sessionId = `${section.toUpperCase().slice(0, 3)}-${timestamp}`;
-  console.log({ ssid, password });
+  console.log({ sessionId });
   console.log("📡 Starting BLE beacon...");
   createBluetoothBeacon(ssid, password).then((result) => {
     if (result.success) {

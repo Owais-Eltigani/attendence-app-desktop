@@ -18,9 +18,19 @@ export async function createHotspot({
   );
 
   // Generate shorter, mobile-friendly SSID (max 15 chars)
-  const timestamp = Date.now().toString().slice(-4); // Last 4 digits only
-  const ssid = `ATT-${section.toUpperCase().slice(0, 3)}-${timestamp}`;
-  const password = `CLASS${classroomNo.toUpperCase().slice(0, 6)}${timestamp}`;
+  let timestamp = Date.now().toString().slice(-4); // Last 4 digits only
+  const password = `${classroomNo.toUpperCase()[0]}CL${classroomNo
+    .toUpperCase()
+    .slice(1, 6)}A${timestamp}SS`;
+
+  //? session to be shared with students to identify their attendance.
+  const sessionId = `${classroomNo.toUpperCase().slice(1, 6)}${section
+    .toUpperCase()
+    .slice(0, 3)}${classroomNo.toUpperCase()[0]}`;
+
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  timestamp = Date.now().toString().slice(-8); // Last 8 digits only
+  const ssid = `${timestamp}SSID${section.toUpperCase().slice(0, 3)}`;
 
   // Send credentials to the focused renderer window (if any)
   const focused =
@@ -32,8 +42,7 @@ export async function createHotspot({
   }
 
   //
-  const sessionId = `${section.toUpperCase().slice(0, 3)}-${timestamp}`;
-  console.log({ ssid, password });
+  console.log({ sessionId });
 
   // Start BLE advertising for all platforms (runs in parallel)
   console.log("📡 Starting BLE beacon...");

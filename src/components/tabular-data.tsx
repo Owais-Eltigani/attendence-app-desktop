@@ -11,8 +11,6 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 interface StudentData {
   name: string;
   enrollmentNo: string;
-  sessionId: string;
-  No?: number;
   submittedAt?: string;
   Notes?: string;
 }

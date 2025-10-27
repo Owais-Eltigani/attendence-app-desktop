@@ -87,11 +87,14 @@ export default function StudentAttendanceApp() {
           {/* Right Side - QR Code Display */}
           <div
             className={`
-              transition-all duration-500 ease-in-out
+              transition-all duration-500 ease-in-out flex-1
               ${serverStarted ? "w-2/3" : "w-1/3"}
             `}
           >
-            <QRCodeDisplay qrCodeData={hotspotCreds} />
+            <QRCodeDisplay
+              qrCodeData={hotspotCreds}
+              sessionStarted={serverStarted}
+            />
           </div>
         </div>
 

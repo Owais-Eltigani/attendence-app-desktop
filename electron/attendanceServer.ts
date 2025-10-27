@@ -131,6 +131,11 @@ export async function startAttendanceServer(sessionId: string, port = 8080) {
 
           // Add timestamp
           studentData.submittedAt = new Date().toISOString();
+          const student = {
+            studentName: studentData.name,
+            enrollmentNo: studentData.enrollmentNo,
+            submittedAt: studentData.submittedAt,
+          };
 
           // Store attendance
           attendanceData.push(studentData);
