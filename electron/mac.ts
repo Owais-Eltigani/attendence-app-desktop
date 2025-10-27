@@ -35,9 +35,6 @@ export async function createHotspotMac(ssid: string, password: string) {
     );
 
     // Wait a moment for window to open
-
-    // Show simplified instructions
-
     await new Promise((resolve) => setTimeout(resolve, 500));
 
     return {
