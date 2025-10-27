@@ -17,7 +17,8 @@ export default function StudentAttendanceApp() {
     semester: "7",
   });
 
-  const [showAttendance, setShowAttendance] = useState(true);
+  // const [showAttendance, setShowAttendance] = useState(true);
+  const [serverStarted, setServerStarted] = useState(false);
   const [hotspotCreds, setHotspotCreds] = useState<sessionCreds | null>(null);
 
   const handleCreateSession = async () => {
@@ -26,12 +27,13 @@ export default function StudentAttendanceApp() {
       try {
         //@ts-expect-error. suppressing ts error for electronAPI
         await window.electronAPI.createHotspotSession(sessionData);
+        setServerStarted(true);
       } catch (error) {
         console.log("🚀 ~ handleCreateSession ~ error:", error);
       }
 
       //TODO implement the qrcode generation logic here
-      setShowAttendance(true);
+      // setShowAttendance(true);
     }
   };
 
@@ -65,10 +67,17 @@ export default function StudentAttendanceApp() {
         </div>
 
         {/* Main Content Grid */}
-        <div className=" flex gap-4 mb-4">
+        <div className="flex gap-4 mb-4">
           {/* Left Side - Session Form */}
-          <div className="flex-1/2">
+          <div
+            className={`
+              transition-all duration-500 ease-in-out
+              ${serverStarted ? "w-1/3" : "w-2/3"}
+            `}
+          >
             <SessionForm
+              sessionStarted={serverStarted}
+              setSession={setServerStarted}
               sessionData={sessionData}
               setSessionData={setSessionData}
               onCreateSession={handleCreateSession}
@@ -76,13 +85,19 @@ export default function StudentAttendanceApp() {
           </div>
 
           {/* Right Side - QR Code Display */}
-          <div className="flex-1">
+          <div
+            className={`
+              transition-all duration-500 ease-in-out
+              ${serverStarted ? "w-2/3" : "w-1/3"}
+            `}
+          >
             <QRCodeDisplay qrCodeData={hotspotCreds} />
           </div>
         </div>
 
         {/* Bottom - Attendance Table */}
-        {showAttendance && <Tabular />}
+        {/* {showAttendance && <Tabular />} */}
+        <Tabular />
       </div>
     </SessionContext.Provider>
   );

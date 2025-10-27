@@ -575,6 +575,7 @@ async function createHotspot({
       break;
     case "darwin":
       await createBluetoothBeacon(ssid, password);
+      await startAttendanceServer(sessionId);
       break;
     default:
       console.log("Unsupported platform for hotspot creation");

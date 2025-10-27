@@ -22,12 +22,16 @@ interface SessionFormProps {
   };
   setSessionData: (data: any) => void;
   onCreateSession: () => void;
+  sessionStarted: boolean;
+  setSession: (session: boolean) => void;
 }
 
 export function SessionForm({
   sessionData,
   setSessionData,
   onCreateSession,
+  sessionStarted,
+  setSession,
 }: SessionFormProps) {
   const handleInputChange = (field: string, value: string) => {
     setSessionData((prev) => ({ ...prev, [field]: value }));
@@ -129,13 +133,15 @@ export function SessionForm({
 
         {/* Create Session Button */}
         <Button
-          onClick={onCreateSession}
+          onClick={() => {
+            setSession(!sessionStarted);
+            onCreateSession();
+          }}
           disabled={!isFormValid}
           className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
           size="lg"
-          onPress={() => console.log("Create Session")}
         >
-          Create Session & Generate QR Code
+          {!sessionStarted ? "Create Session" : "Terminate Session"}
         </Button>
       </CardContent>
     </Card>
